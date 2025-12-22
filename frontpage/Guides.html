@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>导游综合管理平台</title>
+    <style>
+        :root {
+            --primary: #00c6ff;
+            --secondary: #0072ff;
+            --dark: #0f2027;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #e6f7ff;
+            --danger: #ff4d4f;
+            --success: #52c41a;
+            --warning: #faad14;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: var(--text);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        .header {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h1 {
+            font-size: 2rem;
+            text-align: center;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--primary);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+        }
+        .btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin: 0 0.2rem;
+        }
+        .btn-add {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-edit {
+            background: var(--warning);
+            color: #fff;
+        }
+        .btn-delete {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        th {
+            background: rgba(0, 198, 255, 0.15);
+            color: var(--primary);
+        }
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #203a43, #2c5364);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 450px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        }
+        .modal-header {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+        .status-badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+        .status-online {
+            background: var(--success);
+        }
+        .status-offline {
+            background: var(--danger);
+        }
+        .map-container {
+            height: 300px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--primary);
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <h1>🎯 导游综合管理平台</h1>
+</header>
+
+<div class="container">
+    <!-- 第一部分：基础信息 -->
+    <section class="section">
+        <h2 class="section-title">📋 导游基础信息</h2>
+        <div class="card">
+            <button class="btn btn-add" onclick="showModal('basic')">➕ 新增导游</button>
+            <table id="basicTable">
+                <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>年龄</th>
+                    <th>性别</th>
+                    <th>导游证号</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>张明</td>
+                    <td>32</td>
+                    <td>男</td>
+                    <td>D-2024-001</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editRow(this,'basic')">编辑</button>
+                        <button class="btn btn-delete" onclick="delRow(this)">删除</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>李雪</td>
+                    <td>28</td>
+                    <td>女</td>
+                    <td>D-2024-002</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editRow(this,'basic')">编辑</button>
+                        <button class="btn btn-delete" onclick="delRow(this)">删除</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 第二部分：注册与行程管理 -->
+    <section class="section">
+        <h2 class="section-title">📝 导游注册与行程管理</h2>
+        <div class="grid-2">
+            <!-- 注册登记 -->
+            <div class="card">
+                <div class="section-title">注册登记</div>
+                <button class="btn btn-add" onclick="showModal('register')">➕ 新增登记</button>
+                <table id="registerTable">
+                    <thead>
+                    <tr>
+                        <th>导游证号</th>
+                        <th>注册日期</th>
+                        <th>有效期</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>D-2024-001</td>
+                        <td>2024-01-15</td>
+                        <td>2025-01-15</td>
+                        <td><span class="status-badge status-online">有效</span></td>
+                        <td>
+                            <button class="btn btn-edit" onclick="editRow(this,'register')">编辑</button>
+                            <button class="btn btn-delete" onclick="delRow(this)">删除</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 资格审验 -->
+            <div class="card">
+                <div class="section-title">资格审验</div>
+                <button class="btn btn-add" onclick="showModal('verify')">➕ 新增审验</button>
+                <table id="verifyTable">
+                    <thead>
+                    <tr>
+                        <th>导游证号</th>
+                        <th>审验日期</th>
+                        <th>审验结果</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>D-2024-001</td>
+                        <td>2024-03-20</td>
+                        <td>合格</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="editRow(this,'verify')">编辑</button>
+                            <button class="btn btn-delete" onclick="delRow(this)">删除</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 求职应聘 -->
+            <div class="card">
+                <div class="section-title">求职应聘</div>
+                <button class="btn btn-add" onclick="showModal('job')">➕ 新增应聘</button>
+                <table id="jobTable">
+                    <thead>
+                    <tr>
+                        <th>姓名</th>
+                        <th>应聘日期</th>
+                        <th>期望薪资</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>王芳</td>
+                        <td>2024-05-10</td>
+                        <td>8000元/月</td>
+                        <td>待面试</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="editRow(this,'job')">编辑</button>
+                            <button class="btn btn-delete" onclick="delRow(this)">删除</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 行程单申领 -->
+            <div class="card">
+                <div class="section-title">行程单申领</div>
+                <button class="btn btn-add" onclick="showModal('itinerary')">➕ 新增申领</button>
+                <table id="itineraryTable">
+                    <thead>
+                    <tr>
+                        <th>团号</th>
+                        <th>行程单号</th>
+                        <th>申领日期</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>T20240601</td>
+                        <td>XCD-2024-001</td>
+                        <td>2024-05-25</td>
+                        <td><span class="status-badge status-online">已发放</span></td>
+                        <td>
+                            <button class="btn btn-edit" onclick="editRow(this,'itinerary')">编辑</button>
+                            <button class="btn btn-delete" onclick="delRow(this)">删除</button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第三部分：实时位置与团队信息 -->
+    <section class="section">
+        <h2 class="section-title">📍 导游实时位置与团队信息</h2>
+        <div class="card">
+            <button class="btn btn-add" onclick="showModal('location')">➕ 新增位置信息</button>
+            <table id="locationTable">
+                <thead>
+                <tr>
+                    <th>姓名</th>
+                    <th>当前位置</th>
+                    <th>团队人数</th>
+                    <th>更新时间</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>张明</td>
+                    <td>黄山风景区-光明顶</td>
+                    <td>28</td>
+                    <td>2024-06-01 14:30</td>
+                    <td><span class="status-badge status-online">在线</span></td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editRow(this,'location')">编辑</button>
+                        <button class="btn btn-delete" onclick="delRow(this)">删除</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>李雪</td>
+                    <td>宏村景区-月沼</td>
+                    <td>15</td>
+                    <td>2024-06-01 14:25</td>
+                    <td><span class="status-badge status-online">在线</span></td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editRow(this,'location')">编辑</button>
+                        <button class="btn btn-delete" onclick="delRow(this)">删除</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="map-container">
+                🗺️ 导游实时位置地图（需接入地图API）
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- 通用编辑模态框 -->
+<div id="universalModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" id="modalTitle">编辑</div>
+        <form id="universalForm">
+            <div id="modalFields"></div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-delete" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 模态框控制
+    let currentTable = '', editingRow = null;
+    const formFields = {
+        basic: [
+            {label:'姓名',id:'f1',required:true},
+            {label:'年龄',id:'f2',type:'number',required:true},
+            {label:'性别',id:'f3',select:['男','女'],required:true},
+            {label:'导游证号',id:'f4',required:true}
+        ],
+        register: [
+            {label:'导游证号',id:'f1',required:true},
+            {label:'注册日期',id:'f2',type:'date',required:true},
+            {label:'有效期',id:'f3',type:'date',required:true},
+            {label:'状态',id:'f4',select:['有效','过期','注销'],required:true}
+        ],
+        verify: [
+            {label:'导游证号',id:'f1',required:true},
+            {label:'审验日期',id:'f2',type:'date',required:true},
+            {label:'审验结果',id:'f3',select:['合格','不合格','待审'],required:true}
+        ],
+        job: [
+            {label:'姓名',id:'f1',required:true},
+            {label:'应聘日期',id:'f2',type:'date',required:true},
+            {label:'期望薪资',id:'f3',required:true},
+            {label:'状态',id:'f4',select:['待面试','已录用','已拒绝'],required:true}
+        ],
+        itinerary: [
+            {label:'团号',id:'f1',required:true},
+            {label:'行程单号',id:'f2',required:true},
+            {label:'申领日期',id:'f3',type:'date',required:true},
+            {label:'状态',id:'f4',select:['已发放','待发放','已使用'],required:true}
+        ],
+        location: [
+            {label:'姓名',id:'f1',required:true},
+            {label:'当前位置',id:'f2',required:true},
+            {label:'团队人数',id:'f3',type:'number',required:true},
+            {label:'更新时间',id:'f4',type:'datetime-local',required:true},
+            {label:'状态',id:'f5',select:['在线','离线','休息'],required:true}
+        ]
+    };
+
+    function showModal(type){
+        currentTable = type;
+        editingRow = null;
+        document.getElementById('modalTitle').textContent = '新增';
+        buildForm(type);
+        document.getElementById('universalModal').style.display = 'block';
+    }
+
+    function editRow(btn,type){
+        currentTable = type;
+        editingRow = btn.closest('tr');
+        document.getElementById('modalTitle').textContent = '编辑';
+        buildForm(type);
+        const cells = editingRow.cells;
+        formFields[type].forEach((f,i)=>{
+            const el = document.getElementById(f.id);
+            if(el) el.value = cells[i].textContent;
+        });
+        document.getElementById('universalModal').style.display = 'block';
+    }
+
+    function buildForm(type){
+        const container = document.getElementById('modalFields');
+        container.innerHTML = '';
+        formFields[type].forEach(f=>{
+            const div = document.createElement('div');
+            div.className = 'form-group';
+            div.innerHTML = `<label>${f.label}</label>`;
+            if(f.select){
+                const s = document.createElement('select');
+                s.id = f.id; s.required = f.required;
+                f.select.forEach(o=>{
+                    const opt = document.createElement('option');
+                    opt.value = o; opt.textContent = o;
+                    s.appendChild(opt);
+                });
+                div.appendChild(s);
+            }else{
+                const inp = document.createElement('input');
+                inp.id = f.id; inp.required = f.required;
+                if(f.type) inp.type = f.type;
+                div.appendChild(inp);
+            }
+            container.appendChild(div);
+        });
+    }
+
+    function closeModal(){
+        document.getElementById('universalModal').style.display = 'none';
+    }
+
+    document.getElementById('universalForm').addEventListener('submit',function(e){
+        e.preventDefault();
+        const tbody = document.getElementById(currentTable+'Table').querySelector('tbody');
+        const data = formFields[currentTable].map(f=>document.getElementById(f.id).value);
+        if(editingRow){
+            data.forEach((v,i)=> editingRow.cells[i].textContent = v);
+        }else{
+            const tr = tbody.insertRow();
+            data.forEach(v=>{
+                const td = tr.insertCell();
+                td.textContent = v;
+            });
+            const td = tr.insertCell();
+            td.innerHTML = `<button class="btn btn-edit" onclick="editRow(this,'${currentTable}')">编辑</button>
+                                <button class="btn btn-delete" onclick="delRow(this)">删除</button>`;
+        }
+        closeModal();
+    });
+
+    function delRow(btn){
+        if(confirm('确定删除？')) btn.closest('tr').remove();
+    }
+
+    // 实时位置数据模拟更新
+    setInterval(()=>{
+        const rows = document.getElementById('locationTable').querySelectorAll('tbody tr');
+        rows.forEach(row=>{
+            const teamCell = row.cells[2];
+            let num = parseInt(teamCell.textContent);
+            num += Math.floor(Math.random()*5-2);
+            num = Math.max(1, num);
+            teamCell.textContent = num;
+
+            const timeCell = row.cells[3];
+            const now = new Date();
+            timeCell.textContent = now.toLocaleString('zh-CN');
+        });
+    }, 10000);
+
+    // 页面加载动画
+    document.addEventListener('DOMContentLoaded',()=>{
+        document.querySelectorAll('.card').forEach((c,i)=>{
+            c.style.opacity = '0';
+            c.style.transform = 'translateY(20px)';
+            setTimeout(()=>{
+                c.style.transition = 'opacity 0.5s, transform 0.5s';
+                c.style.opacity = '1';
+                c.style.transform = 'translateY(0)';
+            },i*100);
+        });
+    });
+</script>
+</body>
+</html>
+
+
+

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅行社及车辆综合管理平台</title>
+    <style>
+        :root {
+            --primary: #00c6ff;
+            --secondary: #0072ff;
+            --dark: #0f2027;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #e6f7ff;
+            --danger: #ff4d4f;
+            --success: #52c41a;
+            --warning: #faad14;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: var(--text);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        .header {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h1 {
+            font-size: 2rem;
+            text-align: center;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--primary);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+        }
+        .btn {
+            padding: 0.4rem 0.8rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin: 0 0.2rem;
+        }
+        .btn-add {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-edit {
+            background: var(--warning);
+            color: #fff;
+        }
+        .btn-delete {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        th {
+            background: rgba(0, 198, 255, 0.15);
+            color: var(--primary);
+        }
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #203a43, #2c5364);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 420px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+        }
+        .modal-header {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.6rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+        }
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            box-shadow: 0 0 10px var(--primary);
+            transition: width 0.5s;
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+        .status-badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+        .status-pass {
+            background: var(--success);
+        }
+        .status-reject {
+            background: var(--danger);
+        }
+        .status-pending {
+            background: var(--warning);
+        }
+        #map {
+            height: 320px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <h1>🚍 旅行社及旅行车辆综合管理平台</h1>
+</header>
+
+<div class="container">
+    <!-- 第一部分：基础信息 -->
+    <section class="section">
+        <h2 class="section-title">🏢 基础信息</h2>
+        <div class="grid-2">
+            <!-- 旅行社资质 -->
+            <div class="card">
+                <div class="section-title">旅行社资质
+                    <button class="btn btn-add" onclick="showModal('agency')">➕ 新增</button>
+                </div>
+                <table id="agencyTable">
+                    <thead><tr><th>名称</th><th>许可证号</th><th>有效期</th><th>操作</th></tr></thead>
+                    <tbody>
+                    <tr><td>黄山国际旅行社</td><td>L-AH000123</td><td>2025-12-31</td>
+                        <td><button class="btn btn-edit" onclick="editRow(this,'agency')">编辑</button><button class="btn btn-delete" onclick="delRow(this)">删除</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- 诚信状况 -->
+            <div class="card">
+                <div class="section-title">诚信状况
+                    <button class="btn btn-add" onclick="showModal('credit')">➕ 新增</button>
+                </div>
+                <table id="creditTable">
+                    <thead><tr><th>年度</th><th>评分</th><th>等级</th><th>操作</th></tr></thead>
+                    <tbody>
+                    <tr><td>2024</td><td>98</td><td>AAA</td>
+                        <td><button class="btn btn-edit" onclick="editRow(this,'credit')">编辑</button><button class="btn btn-delete" onclick="delRow(this)">删除</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 驾驶员 & 车况 -->
+            <div class="card">
+                <div class="section-title">驾驶员与车况
+                    <button class="btn btn-add" onclick="showModal('vehicle')">➕ 新增</button>
+                </div>
+                <table id="vehicleTable">
+                    <thead><tr><th>车牌</th><th>驾驶员</th><th>电话</th><th>车况</th><th>操作</th></tr></thead>
+                    <tbody>
+                    <tr><td>皖A12345</td><td>赵强</td><td>13805591111</td><td>良好</td>
+                        <td><button class="btn btn-edit" onclick="editRow(this,'vehicle')">编辑</button><button class="btn btn-delete" onclick="delRow(this)">删除</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 旅行社管理人员 -->
+            <div class="card">
+                <div class="section-title">旅行社管理人员
+                    <button class="btn btn-add" onclick="showModal('manager')">➕ 新增</button>
+                </div>
+                <table id="managerTable">
+                    <thead><tr><th>姓名</th><th>职位</th><th>部门</th><th>电话</th><th>操作</th></tr></thead>
+                    <tbody>
+                    <tr><td>孙总</td><td>总经理</td><td>总经办</td><td>13805592222</td>
+                        <td><button class="btn btn-edit" onclick="editRow(this,'manager')">编辑</button><button class="btn btn-delete" onclick="delRow(this)">删除</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 应急人员与车辆 -->
+            <div class="card" style="grid-column:1/-1">
+                <div class="section-title">应急人员与车辆
+                    <button class="btn btn-add" onclick="showModal('emergency')">➕ 新增</button>
+                </div>
+                <table id="emergencyTable">
+                    <thead><tr><th>姓名/车牌</th><th>类型</th><th>电话</th><th>状态</th><th>操作</th></tr></thead>
+                    <tbody>
+                    <tr><td>应急001</td><td>车辆</td><td>13805593333</td><td>待命</td>
+                        <td><button class="btn btn-edit" onclick="editRow(this,'emergency')">编辑</button><button class="btn btn-delete" onclick="delRow(this)">删除</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第二部分：电子行程单 -->
+    <section class="section">
+        <h2 class="section-title">📄 电子行程单管理</h2>
+        <div class="card">
+            <button class="btn btn-add" onclick="addItinerary()">➕ 新增行程单</button>
+            <table id="itineraryTable">
+                <thead><tr><th>团号</th><th>线路名称</th><th>出发日期</th><th>天数</th><th>文件</th><th>操作</th></tr></thead>
+                <tbody>
+                <tr><td>T20240601</td><td>黄山三日游</td><td>2024-06-01</td><td>3</td><td><a href="#" style="color:var(--primary)">下载</a></td>
+                    <td><button class="btn btn-edit" onclick="editItinerary(this)">编辑</button><button class="btn btn-delete" onclick="delRow(this)">删除</button></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 第三部分：出境游签证审核 -->
+    <section class="section">
+        <h2 class="section-title">✈️ 出境游签证审核</h2>
+        <div class="card">
+            <table id="visaTable">
+                <thead><tr><th>团队号</th><th>目的地</th><th>人数</th><th>送签日期</th><th>状态</th><th>操作</th></tr></thead>
+                <tbody>
+                <tr><td>V20240515</td><td>日本大阪</td><td>28</td><td>2024-05-15</td><td><span class="status-badge status-pending">待审核</span></td>
+                    <td>
+                        <button class="btn btn-primary" onclick="visaPass(this)">通过</button>
+                        <button class="btn btn-delete" onclick="visaReject(this)">拒绝</button>
+                    </td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 第四部分：实时游客数量 -->
+    <section class="section">
+        <h2 class="section-title">👥 实时游客数量</h2>
+        <div class="card grid-2">
+            <div class="data-item">
+                <div class="data-number" id="touristCount">1,358</div>
+                <div class="data-label">当前游客总数</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="touristProgress" style="width: 68%"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第五部分：旅游大巴实时信息 -->
+    <section class="section">
+        <h2 class="section-title">🚌 旅游大巴实时信息</h2>
+        <div class="grid-2">
+            <div class="card">
+                <div class="data-item">
+                    <div class="data-number" id="busCount">46</div>
+                    <div class="data-label">在线大巴数量</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-title">实时位置与轨迹</div>
+                <div id="map">🗺️ 地图加载中...</div>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- 通用编辑模态框 -->
+<div id="universalModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header" id="modalTitle">编辑</div>
+        <form id="universalForm">
+            <div id="modalFields"></div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-delete" onclick="closeModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 模态框控制
+    let currentTable = '', editingRow = null;
+    const formFields = {
+        agency: [
+            {label:'旅行社名称',id:'f1',required:true},
+            {label:'许可证号',id:'f2',required:true},
+            {label:'有效期',id:'f3',type:'date',required:true}
+        ],
+        credit: [
+            {label:'年度',id:'f1',type:'number',required:true},
+            {label:'评分',id:'f2',type:'number',required:true},
+            {label:'等级',id:'f3',required:true}
+        ],
+        vehicle: [
+            {label:'车牌号',id:'f1',required:true},
+            {label:'驾驶员姓名',id:'f2',required:true},
+            {label:'电话',id:'f3',type:'tel',required:true},
+            {label:'车况',id:'f4',required:true}
+        ],
+        manager: [
+            {label:'姓名',id:'f1',required:true},
+            {label:'职位',id:'f2',required:true},
+            {label:'部门',id:'f3',required:true},
+            {label:'电话',id:'f4',type:'tel',required:true}
+        ],
+        emergency: [
+            {label:'名称/车牌',id:'f1',required:true},
+            {label:'类型',id:'f2',select:['车辆','人员'],required:true},
+            {label:'电话',id:'f3',type:'tel',required:true},
+            {label:'状态',id:'f4',select:['待命','出勤','维修'],required:true}
+        ]
+    };
+
+    function showModal(type){
+        currentTable = type;
+        editingRow = null;
+        document.getElementById('modalTitle').textContent = '新增';
+        buildForm(type);
+        document.getElementById('universalModal').style.display = 'block';
+    }
+    function editRow(btn,type){
+        currentTable = type;
+        editingRow = btn.closest('tr');
+        document.getElementById('modalTitle').textContent = '编辑';
+        buildForm(type);
+        const cells = editingRow.cells;
+        formFields[type].forEach((f,i)=>{
+            const el = document.getElementById(f.id);
+            if(el) el.value = cells[i].textContent;
+        });
+        document.getElementById('universalModal').style.display = 'block';
+    }
+    function buildForm(type){
+        const container = document.getElementById('modalFields');
+        container.innerHTML = '';
+        formFields[type].forEach(f=>{
+            const div = document.createElement('div');
+            div.className = 'form-group';
+            div.innerHTML = `<label>${f.label}</label>`;
+            if(f.select){
+                const s = document.createElement('select');
+                s.id = f.id; s.required = f.required;
+                f.select.forEach(o=>{
+                    const opt = document.createElement('option');
+                    opt.value = o; opt.textContent = o;
+                    s.appendChild(opt);
+                });
+                div.appendChild(s);
+            }else{
+                const inp = document.createElement('input');
+                inp.id = f.id; inp.required = f.required;
+                if(f.type) inp.type = f.type;
+                div.appendChild(inp);
+            }
+            container.appendChild(div);
+        });
+    }
+    function closeModal(){
+        document.getElementById('universalModal').style.display = 'none';
+    }
+    document.getElementById('universalForm').addEventListener('submit',function(e){
+        e.preventDefault();
+        const tbody = document.getElementById(currentTable+'Table').querySelector('tbody');
+        const data = formFields[currentTable].map(f=>document.getElementById(f.id).value);
+        if(editingRow){
+            data.forEach((v,i)=> editingRow.cells[i].textContent = v);
+        }else{
+            const tr = tbody.insertRow();
+            data.forEach(v=>{
+                const td = tr.insertCell();
+                td.textContent = v;
+            });
+            const td = tr.insertCell();
+            td.innerHTML = `<button class="btn btn-edit" onclick="editRow(this,'${currentTable}')">编辑</button>
+                                <button class="btn btn-delete" onclick="delRow(this)">删除</button>`;
+        }
+        closeModal();
+    });
+    function delRow(btn){
+        if(confirm('确定删除？')) btn.closest('tr').remove();
+    }
+
+    // 签证审核
+    function visaPass(btn){
+        const row = btn.closest('tr');
+        row.cells[4].innerHTML = '<span class="status-badge status-pass">已通过</span>';
+        btn.disabled = true;
+        btn.nextElementSibling.disabled = true;
+    }
+    function visaReject(btn){
+        const row = btn.closest('tr');
+        row.cells[4].innerHTML = '<span class="status-badge status-reject">已拒绝</span>';
+        btn.previousElementSibling.disabled = true;
+        btn.disabled = true;
+    }
+
+    // 行程单管理
+    function addItinerary(){
+        const tbody = document.getElementById('itineraryTable').querySelector('tbody');
+        const tr = tbody.insertRow();
+        tr.innerHTML = `<td>T20240602</td><td>婺源一日游</td><td>2024-06-02</td><td>1</td>
+                            <td><a href="#" style="color:var(--primary)">下载</a></td>
+                            <td><button class="btn btn-edit" onclick="editItinerary(this)">编辑</button>
+                                <button class="btn btn-delete" onclick="delRow(this)">删除</button></td>`;
+    }
+    function editItinerary(btn){
+        alert('编辑功能：可扩展上传/替换文件');
+    }
+
+    // 实时数据模拟
+    setInterval(()=>{
+        const tourist = document.getElementById('touristCount');
+        const bus = document.getElementById('busCount');
+        let t = parseInt(tourist.textContent.replace(',',''));
+        let b = parseInt(bus.textContent);
+        t += Math.floor(Math.random()*11-5);
+        b += Math.floor(Math.random()*5-2);
+        t = Math.max(0,t);
+        b = Math.max(0,b);
+        tourist.textContent = t.toLocaleString();
+        bus.textContent = b;
+        document.getElementById('touristProgress').style.width = Math.min(100, (t/2000)*100) + '%';
+    },3000);
+
+    // 地图占位
+    console.log('地图接口预留：可接入高德/百度/Google地图API');
+
+    // 初始动画
+    document.addEventListener('DOMContentLoaded',()=>{
+        document.querySelectorAll('.card').forEach((c,i)=>{
+            c.style.opacity = '0';
+            c.style.transform = 'translateY(20px)';
+            setTimeout(()=>{
+                c.style.transition = 'opacity 0.5s, transform 0.5s';
+                c.style.opacity = '1';
+                c.style.transform = 'translateY(0)';
+            },i*100);
+        });
+    });
+</script>
+</body>
+</html>
