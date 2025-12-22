@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>星级饭店综合管理平台</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Microsoft YaHei', Arial, sans-serif;
+      background: linear-gradient(135deg, #1a2a6c, #2c3e50, #4a235a);
+      min-height: 100vh;
+      color: #e0e0e0;
+      background-attachment: fixed;
+    }
+
+    .header {
+      background: rgba(26, 42, 108, 0.7);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .header h1 {
+      font-size: 2rem;
+      text-align: center;
+      text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+      letter-spacing: 1px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: rgba(30, 40, 50, 0.4);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      border-color: rgba(79, 195, 247, 0.3);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(79, 195, 247, 0.3);
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(45deg, #4fc3f7, #29b6f6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 1rem;
+      font-size: 1.2rem;
+      color: white;
+      box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+    }
+
+    .card-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .info-item {
+      background: rgba(25, 35, 45, 0.5);
+      padding: 1rem;
+      border-radius: 8px;
+      border-left: 4px solid #4fc3f7;
+      transition: transform 0.3s ease;
+    }
+
+    .info-item:hover {
+      transform: translateX(5px);
+    }
+
+    .info-label {
+      font-size: 0.9rem;
+      color: #b0bec5;
+      margin-bottom: 0.3rem;
+    }
+
+    .info-value {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+      box-shadow: 0 0 5px currentColor;
+    }
+
+    .status-normal { background-color: #4caf50; }
+    .status-warning { background-color: #ff9800; }
+    .status-danger { background-color: #f44336; }
+
+    .real-time-data {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(25, 35, 45, 0.5);
+      padding: 1rem;
+      border-radius: 8px;
+      margin-top: 1rem;
+      border: 1px solid rgba(79, 195, 247, 0.2);
+    }
+    .data-item {
+      text-align: center;
+    }
+
+    .data-number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #4fc3f7;
+      text-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+    }
+
+    .data-label {
+      font-size: 0.9rem;
+      color: #b0bec5;
+      margin-top: 0.3rem;
+    }
+
+    .manager-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+      background: rgba(25, 35, 45, 0.5);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .manager-table th,
+    .manager-table td {
+      padding: 0.8rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .manager-table th {
+      background: rgba(16, 42, 67, 0.8);
+      color: #4fc3f7;
+      font-weight: bold;
+    }
+
+    .manager-table tr:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .btn {
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+      margin: 0 0.2rem;
+    }
+
+    .btn-edit {
+      background: #ff9800;
+      color: white;
+    }
+    .btn-delete {
+      background: #f44336;
+      color: white;
+    }
+
+    .btn-add {
+      background: #4caf50;
+      color: white;
+      margin-bottom: 1rem;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4fc3f7, #29b6f6);
+      transition: width 0.5s ease;
+      box-shadow: 0 0 10px rgba(79, 195, 247, 0.5);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.7);
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+      background: rgba(30, 40, 50, 0.9);
+      margin: 10% auto;
+      padding: 2rem;
+      border-radius: 15px;
+      width: 400px;
+      border: 1px solid rgba(79, 195, 247, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      color: #4fc3f7;
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #b0bec5;
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 0.8rem;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 5px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    .form-group input:focus {
+      outline: none;
+      border-color: #4fc3f7;
+      box-shadow: 0 0 10px rgba(79, 195, 247, 0.3);
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-content {
+        width: 90%;
+        margin: 20% auto;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="header">
+  <h1>🏨 星级饭店综合管理平台</h1>
+</div>
+
+<div class="container">
+  <div class="dashboard-grid">
+    <!-- 饭店基础信息 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🏢</div>
+        <div class="card-title">饭店基础信息</div>
+      </div>
+      <div class="info-grid">
+        <div class="info-item">
+          <div class="info-label">饭店名称</div>
+          <div class="info-value">黄山国际大酒店</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">星级评定</div>
+          <div class="info-value">五星级</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">最大接待量</div>
+          <div class="info-value">1,200 人</div>
+        </div>
+        <div class="info-item">
+          <div class="info-label">停车位总数</div>
+          <div class="info-value">580 个</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 实时入住率 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">📊</div>
+        <div class="card-title">实时入住率监控</div>
+      </div>
+      <div class="real-time-data">
+        <div class="data-item">
+          <div class="data-number" id="occupancy-rate">78.5%</div>
+          <div class="data-label">当前入住率</div>
+        </div>
+        <div class="data-item">
+          <div class="data-number" id="occupied-rooms">942</div>
+          <div class="data-label">已入住房间</div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width: 78.5%"></div>
+      </div>
+      <div style="margin-top: 1rem; padding: 0.8rem; background: rgba(25, 35, 45, 0.5); border-radius: 8px; text-align: center;">
+        <span class="status-indicator status-warning"></span>
+        <span style="color: #ffeb3b; font-weight: bold;">入住率较高，建议合理调配</span>
+      </div>
+    </div>
+
+    <!-- 车位使用情况 -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon">🚗</div>
+        <div class="card-title">停车位使用情况</div>
+      </div>
+      <div class="real-time-data">
+        <div class="data-item">
+          <div class="data-number" id="parking-occupied">423</div>
+          <div class="data-label">已使用车位</div>
+        </div>
+        <div class="data-item">
+          <div class="data-number" id="parking-available">157</div>
+          <div class="data-label">空余车位</div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="parking-progress" style="width: 73%"></div>
+      </div>
+    </div>
+
+    <!-- 饭店管理员信息 -->
+    <div class="card" style="grid-column: 1 / -1;">
+      <div class="card-header">
+        <div class="card-icon">👥</div>
+        <div class="card-title">饭店管理员信息</div>
+        <button class="btn btn-add" onclick="showAddModal()">➕ 添加管理员</button>
+      </div>
+      <table class="manager-table" id="managerTable">
+        <thead>
+        <tr>
+          <th>姓名</th>
+          <th>职位</th>
+          <th>部门</th>
+          <th>联系电话</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+        </thead>
+        <tbody id="managerTableBody">
+        <tr>
+          <td>张明</td>
+          <td>总经理</td>
+          <td>管理层</td>
+          <td>138-0559-8888</td>
+          <td><span class="status-indicator status-normal"></span>在岗</td>
+          <td>
+            <button class="btn btn-edit" onclick="editManager(this)">编辑</button>
+            <button class="btn btn-delete" onclick="deleteManager(this)">删除</button>
+          </td>
+        </tr>
+        <tr>
+          <td>李华</td>
+          <td>前厅经理</td>
+          <td>前厅部</td>
+          <td>139-0559-7777</td>
+          <td><span class="status-indicator status-normal"></span>在岗</td>
+          <td>
+            <button class="btn btn-edit" onclick="editManager(this)">编辑</button>
+            <button class="btn btn-delete" onclick="deleteManager(this)">删除</button>
+          </td>
+        </tr>
+        <tr>
+          <td>王芳</td>
+          <td>客房经理</td>
+          <td>客房部</td>
+          <td>137-0559-6666</td>
+          <td><span class="status-indicator status-warning"></span>休假</td>
+          <td>
+            <button class="btn btn-edit" onclick="editManager(this)">编辑</button>
+            <button class="btn btn-delete" onclick="deleteManager(this)">删除</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- 添加/编辑管理员模态框 -->
+<div id="managerModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header" id="modalTitle">添加管理员</div>
+    <form id="managerForm">
+      <div class="form-group">
+        <label>姓名</label>
+        <input type="text" id="managerName" required>
+      </div>
+      <div class="form-group">
+        <label>职位</label>
+        <input type="text" id="managerPosition" required>
+      </div>
+      <div class="form-group">
+        <label>部门</label>
+        <input type="text" id="managerDepartment" required>
+      </div>
+      <div class="form-group">
+        <label>联系电话</label>
+        <input type="tel" id="managerPhone" required>
+      </div>
+      <div class="form-group">
+        <label>状态</label>
+        <select id="managerStatus" style="width: 100%; padding: 0.8rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.1); color: white;">
+          <option value="normal">在岗</option>
+          <option value="warning">休假</option>
+          <option value="danger">离职</option>
+        </select>
+      </div>
+      <div class="modal-buttons">
+        <button type="button" class="btn btn-delete" onclick="closeModal()">取消</button>
+        <button type="submit" class="btn btn-add">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // 模拟实时数据更新
+  function updateRealTimeData() {
+    const occupancyElement = document.getElementById('occupancy-rate');
+    const occupiedRoomsElement = document.getElementById('occupied-rooms');
+    const parkingOccupiedElement = document.getElementById('parking-occupied');
+    const parkingAvailableElement = document.getElementById('parking-available');
+
+    // 模拟入住率变化
+    let currentOccupancy = parseFloat(occupancyElement.textContent);
+    let change = (Math.random() - 0.5) * 2; // -1 到 1 之间
+    currentOccupancy += change;
+    currentOccupancy = Math.max(0, Math.min(100, currentOccupancy));
+
+    // 更新显示
+    occupancyElement.textContent = currentOccupancy.toFixed(1) + '%';
+    occupiedRoomsElement.textContent = Math.round(1200 * currentOccupancy / 100);
+
+    // 更新进度条
+    document.getElementById('progress-fill').style.width = currentOccupancy + '%';
+
+    // 模拟停车位变化
+    let parkingOccupied = parseInt(parkingOccupiedElement.textContent);
+    let parkingChange = Math.floor(Math.random() * 11) - 5;
+    parkingOccupied += parkingChange;
+    parkingOccupied = Math.max(0, Math.min(580, parkingOccupied));
+
+    parkingOccupiedElement.textContent = parkingOccupied;
+    parkingAvailableElement.textContent = 580 - parkingOccupied;
+
+    // 更新停车位进度条
+    document.getElementById('parking-progress').style.width = (parkingOccupied / 580 * 100) + '%';
+
+    // 更新状态指示器
+    const statusIndicator = document.querySelector('.status-indicator');
+    if (currentOccupancy > 90) {
+      statusIndicator.className = 'status-indicator status-danger';
+    } else if (currentOccupancy > 80) {
+      statusIndicator.className = 'status-indicator status-warning';
+    } else {
+      statusIndicator.className = 'status-indicator status-normal';
+    }
+  }
+
+  // 管理员管理功能
+  let editingRow = null;
+
+  function showAddModal() {
+    document.getElementById('managerModal').style.display = 'block';
+    document.getElementById('modalTitle').textContent = '添加管理员';
+    document.getElementById('managerForm').reset();
+    editingRow = null;
+  }
+
+  function closeModal() {
+    document.getElementById('managerModal').style.display = 'none';
+    editingRow = null;
+  }
+
+  function editManager(btn) {
+    const row = btn.closest('tr');
+    editingRow = row;
+
+    const cells = row.cells;
+    document.getElementById('managerName').value = cells[0].textContent;
+    document.getElementById('managerPosition').value = cells[1].textContent;
+    document.getElementById('managerDepartment').value = cells[2].textContent;
+    document.getElementById('managerPhone').value = cells[3].textContent;
+
+    // 获取状态
+    const statusSpan = cells[4].querySelector('.status-indicator');
+    let status = 'normal';
+    if (statusSpan.classList.contains('status-warning')) status = 'warning';
+    if (statusSpan.classList.contains('status-danger')) status = 'danger';
+    document.getElementById('managerStatus').value = status;
+
+    document.getElementById('modalTitle').textContent = '编辑管理员';
+    document.getElementById('managerModal').style.display = 'block';
+  }
+
+  function deleteManager(btn) {
+    if (confirm('确定要删除这位管理员吗？')) {
+      const row = btn.closest('tr');
+      row.remove();
+    }
+  }
+  document.getElementById('managerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById('managerName').value;
+    const position = document.getElementById('managerPosition').value;
+    const department = document.getElementById('managerDepartment').value;
+    const phone = document.getElementById('managerPhone').value;
+    const status = document.getElementById('managerStatus').value;
+
+    let statusClass = 'status-normal';
+    let statusText = '在岗';
+    if (status === 'warning') {
+      statusClass = 'status-warning';
+      statusText = '休假';
+    } else if (status === 'danger') {
+      statusClass = 'status-danger';
+      statusText = '离职';
+    }
+
+    if (editingRow) {
+      // 编辑模式
+      const cells = editingRow.cells;
+      cells[0].textContent = name;
+      cells[1].textContent = position;
+      cells[2].textContent = department;
+      cells[3].textContent = phone;
+      cells[4].innerHTML = `<span class="status-indicator ${statusClass}"></span>${statusText}`;
+    } else {
+      // 添加模式
+      const tbody = document.getElementById('managerTableBody');
+      const newRow = tbody.insertRow();
+      newRow.innerHTML = `
+                    <td>${name}</td>
+                    <td>${position}</td>
+                    <td>${department}</td>
+                    <td>${phone}</td>
+                    <td><span class="status-indicator ${statusClass}"></span>${statusText}</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editManager(this)">编辑</button>
+                        <button class="btn btn-delete" onclick="deleteManager(this)">删除</button>
+                    </td>
+                `;
+    }
+
+    closeModal();
+  });
+  // 点击模态框外部关闭
+  window.onclick = function(event) {
+    const modal = document.getElementById('managerModal');
+    if (event.target === modal) {
+      closeModal();
+    }
+  }
+
+  // 定时更新数据
+  setInterval(updateRealTimeData, 3000);
+
+  // 页面加载完成后的初始化
+  document.addEventListener('DOMContentLoaded', function() {
+    console.log('星级饭店综合管理平台已加载');
+
+    // 添加一些交互效果
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-5px)';
+      });
+
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+      });
+    });
+  });
+</script>
+</body>
+</html>
