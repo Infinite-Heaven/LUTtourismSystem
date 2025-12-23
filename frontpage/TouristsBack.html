@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>游客投诉管理平台</title>
+    <style>
+        :root {
+            --primary: #00c6ff;
+            --secondary: #0072ff;
+            --dark: #0f2027;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #e6f7ff;
+            --danger: #ff4d4f;
+            --success: #52c41a;
+            --warning: #faad14;
+            --info: #1890ff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: var(--text);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        .header {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h1 {
+            font-size: 2rem;
+            text-align: center;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--primary);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+        }
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin: 0 0.2rem;
+        }
+        .btn-add {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-edit {
+            background: var(--warning);
+            color: #fff;
+        }
+        .btn-delete {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 198, 255, 0.3);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        th {
+            background: rgba(0, 198, 255, 0.15);
+            color: var(--primary);
+        }
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #203a43, #2c5364);
+            margin: 3% auto;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 800px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close {
+            color: #aaa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close:hover {
+            color: var(--primary);
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .status-badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+        .status-new {
+            background: var(--info);
+        }
+        .status-processing {
+            background: var(--warning);
+        }
+        .status-completed {
+            background: var(--success);
+        }
+        .status-closed {
+            background: #666;
+        }
+        .priority-high {
+            border-left: 4px solid var(--danger);
+        }
+        .priority-medium {
+            border-left: 4px solid var(--warning);
+        }
+        .priority-low {
+            border-left: 4px solid var(--info);
+        }
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin-top: 1rem;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--glass-border);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.75rem;
+            top: 0.75rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+        .timeline-time {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+        .timeline-content {
+            margin-top: 0.25rem;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <h1>📞 游客投诉管理平台</h1>
+</header>
+
+<div class="container">
+    <!-- 投诉统计 -->
+    <section class="section">
+        <h2 class="section-title">📊 投诉统计概览</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalComplaints">128</div>
+                <div class="stat-label">本月投诉总量</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="processingComplaints">23</div>
+                <div class="stat-label">处理中</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="completedComplaints">98</div>
+                <div class="stat-label">已完成</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="satisfactionRate">92.5%</div>
+                <div class="stat-label">满意度</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 新增投诉 -->
+    <section class="section">
+        <h2 class="section-title">📝 新增投诉登记</h2>
+        <div class="card">
+            <button class="btn btn-add" onclick="showComplaintModal()">➕ 新增投诉</button>
+            <div class="form-grid" style="margin-top:1rem;">
+                <div class="form-group">
+                    <label>投诉编号</label>
+                    <input type="text" id="complaintNo" value="C202406001" readonly>
+                </div>
+                <div class="form-group">
+                    <label>投诉渠道</label>
+                    <select id="channel">
+                        <option value="电话">电话</option>
+                        <option value="网站">网站</option>
+                        <option value="APP">APP</option>
+                        <option value="现场">现场</option>
+                        <option value="12345">12345转办</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>投诉人姓名</label>
+                    <input type="text" id="complainantName">
+                </div>
+                <div class="form-group">
+                    <label>联系电话</label>
+                    <input type="tel" id="complainantPhone">
+                </div>
+                <div class="form-group">
+                    <label>涉及景区/企业</label>
+                    <input type="text" id="involvedEntity">
+                </div>
+                <div class="form-group">
+                    <label>投诉类型</label>
+                    <select id="complaintType">
+                        <option value="服务质量">服务质量</option>
+                        <option value="价格争议">价格争议</option>
+                        <option value="安全问题">安全问题</option>
+                        <option value="环境卫生">环境卫生</option>
+                        <option value="设施设备">设施设备</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label>投诉内容</label>
+                    <textarea id="complaintContent" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label>投诉时间</label>
+                    <input type="datetime-local" id="complaintTime">
+                </div>
+                <div class="form-group">
+                    <label>紧急程度</label>
+                    <select id="priority">
+                        <option value="低">低</option>
+                        <option value="中">中</option>
+                        <option value="高">高</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="saveComplaint()">保存投诉</button>
+                <button class="btn btn-warning" onclick="resetForm()">重置</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 投诉处理流程 -->
+    <section class="section">
+        <h2 class="section-title">⚙️ 投诉处理流程</h2>
+        <div class="card">
+            <div class="section-title">处理中的投诉</div>
+            <table id="processTable">
+                <thead>
+                <tr>
+                    <th>投诉编号</th>
+                    <th>投诉人</th>
+                    <th>投诉类型</th>
+                    <th>首问负责人</th>
+                    <th>当前状态</th>
+                    <th>处理时限</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="priority-high">
+                    <td>C202405028</td>
+                    <td>张先生</td>
+                    <td>服务质量</td>
+                    <td>客服A</td>
+                    <td><span class="status-badge status-processing">处理中</span></td>
+                    <td>2024-06-05</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="showProcessModal(this)">处理</button>
+                        <button class="btn btn-primary" onclick="showTimelineModal(this)">流程</button>
+                    </td>
+                </tr>
+                <tr class="priority-medium">
+                    <td>C202405027</td>
+                    <td>李女士</td>
+                    <td>价格争议</td>
+                    <td>客服B</td>
+                    <td><span class="status-badge status-new">新投诉</span></td>
+                    <td>2024-06-08</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="showProcessModal(this)">处理</button>
+                        <button class="btn btn-primary" onclick="showTimelineModal(this)">流程</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+    <!-- 已完成投诉 -->
+    <section class="section">
+        <h2 class="section-title">✅ 已完成投诉</h2>
+        <div class="card">
+            <div class="section-title">近30天已完成投诉</div>
+            <table id="completedTable">
+                <thead>
+                <tr>
+                    <th>投诉编号</th>
+                    <th>投诉人</th>
+                    <th>投诉类型</th>
+                    <th>处理结果</th>
+                    <th>满意度</th>
+                    <th>完成时间</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>C202405025</td>
+                    <td>王先生</td>
+                    <td>设施设备</td>
+                    <td>已解决</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td>2024-05-30</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="showDetailModal(this)">详情</button>
+                        <button class="btn btn-success" onclick="downloadReport(this)">报告</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<!-- 投诉处理模态框 -->
+<div id="processModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>投诉处理登记</span>
+            <span class="close" onclick="closeProcessModal()">&times;</span>
+        </div>
+        <form id="processForm">
+            <div class="form-group">
+                <label>处理步骤</label>
+                <select id="processStep">
+                    <option value="受理">受理</option>
+                    <option value="调查">调查核实</option>
+                    <option value="协调">协调处理</option>
+                    <option value="回复">回复投诉人</option>
+                    <option value="结案">结案</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>处理结果</label>
+                <select id="processResult">
+                    <option value="已解决">已解决</option>
+                    <option value="部分解决">部分解决</option>
+                    <option value="无法解决">无法解决</option>
+                    <option value="投诉人撤诉">投诉人撤诉</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>处理说明</label>
+                <textarea id="processDescription" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+                <label>补偿方案</label>
+                <textarea id="compensation" rows="2"></textarea>
+            </div>
+            <div class="form-group">
+                <label>投诉人满意度</label>
+                <select id="satisfaction">
+                    <option value="5">⭐⭐⭐⭐⭐ 非常满意</option>
+                    <option value="4">⭐⭐⭐⭐ 满意</option>
+                    <option value="3">⭐⭐⭐ 一般</option>
+                    <option value="2">⭐⭐ 不满意</option>
+                    <option value="1">⭐ 非常不满意</option>
+                </select>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-danger" onclick="closeProcessModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存处理结果</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 流程跟踪模态框 -->
+<div id="timelineModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>投诉处理流程跟踪</span>
+            <span class="close" onclick="closeTimelineModal()">&times;</span>
+        </div>
+        <div class="timeline" id="timeline">
+            <div class="timeline-item">
+                <div class="timeline-time">2024-05-28 14:30</div>
+                <div class="timeline-content">投诉接入 - 电话渠道，客服A接听</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-time">2024-05-28 14:35</div>
+                <div class="timeline-content">初步核实 - 联系投诉人确认详细信息</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-time">2024-05-28 15:00</div>
+                <div class="timeline-content">受理登记 - 正式受理投诉并分配处理人员</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-time">2024-05-29 09:00</div>
+                <div class="timeline-content">调查核实 - 联系涉事景区了解情况</div>
+            </div>
+        </div>
+        <div class="modal-buttons">
+            <button class="btn btn-primary" onclick="addTimelineItem()">添加处理记录</button>
+            <button class="btn btn-danger" onclick="closeTimelineModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 详情查看模态框 -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>投诉详情查看</span>
+            <span class="close" onclick="closeDetailModal()">&times;</span>
+        </div>
+        <div id="detailContent">
+            <!-- 动态填充详情内容 -->
+        </div>
+        <div class="modal-buttons">
+            <button class="btn btn-primary" onclick="printDetail()">打印</button>
+            <button class="btn btn-danger" onclick="closeDetailModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 投诉编号生成
+    let complaintCounter = 128;
+    function generateComplaintNo() {
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const seq = String(complaintCounter++).padStart(3, '0');
+        return `C${year}${month}${day}${seq}`;
+    }
+
+    // 模态框控制
+    let currentProcessRow = null;
+    let currentTimelineRow = null;
+    let currentDetailRow = null;
+
+    function showComplaintModal() {
+        document.getElementById('complaintNo').value = generateComplaintNo();
+        document.getElementById('complaintTime').value = new Date().toISOString().slice(0, 16);
+        // 自动填充一些字段用于演示
+        document.getElementById('complainantName').value = '测试用户';
+        document.getElementById('complainantPhone').value = '13800138000';
+        document.getElementById('involvedEntity').value = '黄山风景区';
+        document.getElementById('complaintContent').value = '景区排队时间过长，希望增加引导人员';
+    }
+
+    function showProcessModal(btn) {
+        currentProcessRow = btn.closest('tr');
+        document.getElementById('processModal').style.display = 'block';
+        document.getElementById('processForm').reset();
+    }
+
+    function showTimelineModal(btn) {
+        currentTimelineRow = btn.closest('tr');
+        document.getElementById('timelineModal').style.display = 'block';
+        // 这里可以根据实际数据动态加载流程记录
+    }
+
+    function showDetailModal(btn) {
+        currentDetailRow = btn.closest('tr');
+        document.getElementById('detailModal').style.display = 'block';
+        // 动态填充详情内容
+        const cells = currentDetailRow.cells;
+        document.getElementById('detailContent').innerHTML = `
+                <div class="form-group">
+                    <label>投诉编号：</label>
+                    <p>${cells[0].textContent}</p>
+                </div>
+                <div class="form-group">
+                    <label>投诉人：</label>
+                    <p>${cells[1].textContent}</p>
+                </div>
+                <div class="form-group">
+                    <label>投诉类型：</label>
+                    <p>${cells[2].textContent}</p>
+                </div>
+                <div class="form-group">
+                    <label>处理结果：</label>
+                    <p>${cells[3].textContent}</p>
+                </div>
+                <div class="form-group">
+                    <label>满意度：</label>
+                    <p>${cells[4].textContent}</p>
+                </div>
+                <div class="form-group">
+                    <label>完成时间：</label>
+                    <p>${cells[5].textContent}</p>
+                </div>
+            `;
+    }
+
+    function closeProcessModal() {
+        document.getElementById('processModal').style.display = 'none';
+        currentProcessRow = null;
+    }
+
+    function closeTimelineModal() {
+        document.getElementById('timelineModal').style.display = 'none';
+        currentTimelineRow = null;
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').style.display = 'none';
+        currentDetailRow = null;
+    }
+
+    // 保存投诉处理结果
+    document.getElementById('processForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (currentProcessRow) {
+            const satisfaction = document.getElementById('satisfaction').value;
+            const stars = '⭐'.repeat(parseInt(satisfaction));
+            currentProcessRow.cells[4].innerHTML = '<span class="status-badge status-completed">已完成</span>';
+            currentProcessRow.cells[5].textContent = new Date().toLocaleDateString('zh-CN');
+            // 移动到已完成表格
+            const completedTable = document.getElementById('completedTable').querySelector('tbody');
+            const newRow = completedTable.insertRow(0);
+            newRow.innerHTML = `
+                    <td>${currentProcessRow.cells[0].textContent}</td>
+                    <td>${currentProcessRow.cells[1].textContent}</td>
+                    <td>${currentProcessRow.cells[2].textContent}</td>
+                    <td>${document.getElementById('processResult').value}</td>
+                    <td>${stars}</td>
+                    <td>${new Date().toLocaleDateString('zh-CN')}</td>
+                    <td>
+                        <button class="btn btn-primary" onclick="showDetailModal(this)">详情</button>
+                        <button class="btn btn-success" onclick="downloadReport(this)">报告</button>
+                    </td>
+                `;
+            currentProcessRow.remove();
+        }
+        closeProcessModal();
+        updateStats();
+        alert('投诉处理完成！');
+    });
+
+    // 保存投诉信息
+    function saveComplaint() {
+        const complaintData = {
+            no: document.getElementById('complaintNo').value,
+            channel: document.getElementById('channel').value,
+            name: document.getElementById('complainantName').value,
+            phone: document.getElementById('complainantPhone').value,
+            entity: document.getElementById('involvedEntity').value,
+            type: document.getElementById('complaintType').value,
+            content: document.getElementById('complaintContent').value,
+            time: document.getElementById('complaintTime').value,
+            priority: document.getElementById('priority').value
+        };
+
+        // 添加到处理中表格
+        const processTable = document.getElementById('processTable').querySelector('tbody');
+        const newRow = processTable.insertRow(0);
+        const priorityClass = complaintData.priority === '高' ? 'priority-high' :
+            complaintData.priority === '中' ? 'priority-medium' : 'priority-low';
+        newRow.className = priorityClass;
+        newRow.innerHTML = `
+                <td>${complaintData.no}</td>
+                <td>${complaintData.name}</td>
+                <td>${complaintData.type}</td>
+                <td>${complaintData.channel}</td>
+                <td><span class="status-badge status-new">新投诉</span></td>
+                <td>${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('zh-CN')}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="showProcessModal(this)">处理</button>
+                    <button class="btn btn-primary" onclick="showTimelineModal(this)">流程</button>
+                </td>
+            `;
+
+        updateStats();
+        alert('投诉已登记，进入处理流程！');
+        resetForm();
+    }
+
+    // 重置表单
+    function resetForm() {
+        document.getElementById('complainantName').value = '';
+        document.getElementById('complainantPhone').value = '';
+        document.getElementById('involvedEntity').value = '';
+        document.getElementById('complaintContent').value = '';
+        document.getElementById('complaintTime').value = '';
+        document.getElementById('priority').value = '中';
+    }
+
+    // 添加流程记录
+    function addTimelineItem() {
+        const content = prompt('请输入处理记录：');
+        if (content) {
+            const timeline = document.getElementById('timeline');
+            const newItem = document.createElement('div');
+            newItem.className = 'timeline-item';
+            newItem.innerHTML = `
+                    <div class="timeline-time">${new Date().toLocaleString('zh-CN')}</div>
+                    <div class="timeline-content">${content}</div>
+                `;
+            timeline.appendChild(newItem);
+        }
+    }
+
+    // 下载报告
+    function downloadReport(btn) {
+        alert('投诉处理报告已生成，正在下载...');
+        // 实际项目中这里会生成并下载PDF报告
+    }
+
+    // 打印详情
+    function printDetail() {
+        window.print();
+    }
+
+    // 更新统计数据
+    function updateStats() {
+        const processing = document.getElementById('processTable').querySelectorAll('tbody tr').length;
+        const completed = document.getElementById('completedTable').querySelectorAll('tbody tr').length;
+        const total = processing + completed;
+        const satisfaction = 92.5; // 模拟数据
+
+        document.getElementById('totalComplaints').textContent = total;
+        document.getElementById('processingComplaints').textContent = processing;
+        document.getElementById('completedComplaints').textContent = completed;
+        document.getElementById('satisfactionRate').textContent = satisfaction + '%';
+    }
+
+    // 点击模态框外部关闭
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    };
+
+
+    // 页面加载动画
+    document.addEventListener('DOMContentLoaded',()=>{
+        document.querySelectorAll('.card').forEach((c,i)=>{
+            c.style.opacity = '0';
+            c.style.transform = 'translateY(20px)';
+            setTimeout(()=>{
+                c.style.transition = 'opacity 0.5s, transform 0.5s';
+                c.style.opacity = '1';
+                c.style.transform = 'translateY(0)';
+            },i*100);
+        });
+
+        // 设置默认时间
+        document.getElementById('complaintTime').value = new Date().toISOString().slice(0, 16);
+    });
+</script>
+</body>
+</html>

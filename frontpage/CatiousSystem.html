@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>告警（提示）信息设定平台</title>
+    <style>
+        :root {
+            --primary: #00c6ff;
+            --secondary: #0072ff;
+            --dark: #0f2027;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #e6f7ff;
+            --danger: #ff4d4f;
+            --success: #52c41a;
+            --warning: #faad14;
+            --info: #1890ff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: var(--text);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        .header {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h1 {
+            font-size: 2rem;
+            text-align: center;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--primary);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+        }
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin: 0 0.2rem;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-warning {
+            background: var(--warning);
+            color: #fff;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 198, 255, 0.3);
+        }
+        .threshold-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .threshold-item label {
+            flex: 1;
+            margin: 0;
+        }
+        .threshold-item input {
+            width: 120px;
+            text-align: center;
+        }
+        .unit {
+            color: #aaa;
+            font-size: 0.9rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        th {
+            background: rgba(0, 198, 255, 0.15);
+            color: var(--primary);
+        }
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #203a43, #2c5364);
+            margin: 5% auto;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 600px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close {
+            color: #aaa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close:hover {
+            color: var(--primary);
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .status-badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #fff;
+        }
+        .status-pending {
+            background: var(--warning);
+        }
+        .status-approved {
+            background: var(--success);
+        }
+        .status-rejected {
+            background: var(--danger);
+        }
+        .status-processed {
+            background: var(--info);
+        }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+        .alert-high {
+            border-left: 4px solid var(--danger);
+        }
+        .alert-medium {
+            border-left: 4px solid var(--warning);
+        }
+        .alert-low {
+            border-left: 4px solid var(--info);
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <h1>⚠️ 告警（提示）信息设定平台</h1>
+</header>
+
+<div class="container">
+    <!-- 第一部分：阈值设定 -->
+    <section class="section">
+        <h2 class="section-title">📊 旅游品质阈值设定</h2>
+        <div class="card">
+            <form id="thresholdForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>景区游客容量告警阈值</label>
+                        <div class="threshold-item">
+                            <label>最大容量百分比</label>
+                            <input type="number" id="touristPercent" value="80" min="50" max="100">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>停车位告警阈值</label>
+                        <div class="threshold-item">
+                            <label>占用率百分比</label>
+                            <input type="number" id="parkingPercent" value="85" min="50" max="100">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>饭店入住率告警阈值</label>
+                        <div class="threshold-item">
+                            <label>入住率百分比</label>
+                            <input type="number" id="hotelPercent" value="90" min="50" max="100">
+                            <span class="unit">%</span>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>缆车等候时间告警阈值</label>
+                        <div class="threshold-item">
+                            <label>最大等候时间</label>
+                            <input type="number" id="cableTime" value="30" min="10" max="120">
+                            <span class="unit">分钟</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn btn-primary" onclick="saveThresholds()">保存阈值设定</button>
+                    <button type="button" class="btn btn-warning" onclick="resetThresholds()">重置默认值</button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- 第二部分：团队行程偏离设定 -->
+    <section class="section">
+        <h2 class="section-title">🚌 团队行程偏离设定</h2>
+        <div class="card">
+            <button class="btn btn-add" onclick="showRouteModal()">➕ 录入团队行程</button>
+            <table id="routeTable">
+                <thead>
+                <tr>
+                    <th>团队编号</th>
+                    <th>线路名称</th>
+                    <th>偏离阈值(米)</th>
+                    <th>持续时间(分钟)</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>T20240601</td>
+                    <td>黄山三日游</td>
+                    <td>500</td>
+                    <td>10</td>
+                    <td><span class="status-badge status-approved">启用</span></td>
+                    <td>
+                        <button class="btn btn-edit" onclick="editRoute(this)">编辑</button>
+                        <button class="btn btn-delete" onclick="delRoute(this)">删除</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 第三部分：告警信息发布审核 -->
+    <section class="section">
+        <h2 class="section-title">📢 告警信息发布审核</h2>
+        <div class="card">
+            <div class="section-title">待审核告警信息</div>
+            <table id="publishTable">
+                <thead>
+                <tr>
+                    <th>告警类型</th>
+                    <th>告警内容</th>
+                    <th>告警级别</th>
+                    <th>提交时间</th>
+                    <th>提交人</th>
+                    <th>审核状态</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="alert-high">
+                    <td>游客容量</td>
+                    <td>黄山风景区游客数量已达最大容量的85%</td>
+                    <td>高级</td>
+                    <td>2024-06-01 14:30</td>
+                    <td>值班员A</td>
+                    <td><span class="status-badge status-pending">待审核</span></td>
+                    <td>
+                        <button class="btn btn-success" onclick="approvePublish(this)">通过</button>
+                        <button class="btn btn-danger" onclick="rejectPublish(this)">拒绝</button>
+                    </td>
+                </tr>
+                <tr class="alert-medium">
+                    <td>停车容量</td>
+                    <td>南大门停车场占用率达90%，建议引导至北门</td>
+                    <td>中级</td>
+                    <td>2024-06-01 14:25</td>
+                    <td>值班员B</td>
+                    <td><span class="status-badge status-pending">待审核</span></td>
+                    <td>
+                        <button class="btn btn-success" onclick="approvePublish(this)">通过</button>
+                        <button class="btn btn-danger" onclick="rejectPublish(this)">拒绝</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="showPublishModal()">新建发布申请</button>
+                <button class="btn btn-warning" onclick="showHistoryModal()">查看发布历史</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 第四部分：告警处置登记 -->
+    <section class="section">
+        <h2 class="section-title">🔧 告警处置登记</h2>
+        <div class="card">
+            <div class="section-title">待处置告警信息</div>
+            <table id="processTable">
+                <thead>
+                <tr>
+                    <th>告警编号</th>
+                    <th>告警类型</th>
+                    <th>告警内容</th>
+                    <th>告警时间</th>
+                    <th>处置状态</th>
+                    <th>操作</th>
+                </tr>
+                </tbody>
+                <tbody>
+                <tr class="alert-low">
+                    <td>A2024060101</td>
+                    <td>缆车等候</td>
+                    <td>云谷缆车等候时间超过30分钟</td>
+                    <td>2024-06-01 14:15</td>
+                    <td><span class="status-badge status-pending">待处置</span></td>
+                    <td>
+                        <button class="btn btn-primary" onclick="showProcessModal(this)">处置登记</button>
+                        <button class="btn btn-success" onclick="completeProcess(this)">完成</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<!-- 行程偏离设定模态框 -->
+<div id="routeModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>团队行程偏离设定</span>
+            <span class="close" onclick="closeRouteModal()">&times;</span>
+        </div>
+        <form id="routeForm">
+            <div class="form-group">
+                <label>团队编号</label>
+                <input type="text" id="teamCode" required>
+            </div>
+            <div class="form-group">
+                <label>线路名称</label>
+                <input type="text" id="routeName" required>
+            </div>
+            <div class="form-group">
+                <label>偏离阈值（米）</label>
+                <input type="number" id="deviationThreshold" value="500" min="100" max="5000">
+            </div>
+            <div class="form-group">
+                <label>持续时间（分钟）</label>
+                <input type="number" id="durationThreshold" value="10" min="5" max="60">
+
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-danger" onclick="closeRouteModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 发布申请模态框 -->
+<div id="publishModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>新建发布申请</span>
+            <span class="close" onclick="closePublishModal()">&times;</span>
+        </div>
+        <form id="publishForm">
+            <div class="form-group">
+                <label>告警类型</label>
+                <select id="alertType">
+                    <option value="游客容量">游客容量</option>
+                    <option value="停车容量">停车容量</option>
+                    <option value="饭店入住">饭店入住</option>
+                    <option value="缆车等候">缆车等候</option>
+                    <option value="团队偏离">团队偏离</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>告警内容</label>
+                <textarea id="alertContent" rows="3" style="width:100%;padding:0.8rem;border:1px solid var(--glass-border);border-radius:6px;background:rgba(255,255,255,0.08);color:var(--text);resize:vertical;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>告警级别</label>
+                <select id="alertLevel">
+                    <option value="低级">低级</option>
+                    <option value="中级">中级</option>
+                    <option value="高级">高级</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>建议发布渠道</label>
+                <div style="display:flex;gap:1rem;">
+                    <label><input type="checkbox" value="LED"> LED屏</label>
+                    <label><input type="checkbox" value="广播"> 广播</label>
+                    <label><input type="checkbox" value="APP"> APP推送</label>
+                    <label><input type="checkbox" value="短信"> 短信</label>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-danger" onclick="closePublishModal()">取消</button>
+                <button type="submit" class="btn btn-primary">提交审核</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 处置登记模态框 -->
+<div id="processModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>告警处置登记</span>
+            <span class="close" onclick="closeProcessModal()">&times;</span>
+        </div>
+        <form id="processForm">
+            <div class="form-group">
+                <label>处置方式</label>
+                <select id="processMethod">
+                    <option value="现场疏导">现场疏导</option>
+                    <option value="调度分流">调度分流</option>
+                    <option value="设备检修">设备检修</option>
+                    <option value="人工引导">人工引导</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>处置结果</label>
+                <textarea id="processResult" rows="3" style="width:100%;padding:0.8rem;border:1px solid var(--glass-border);border-radius:6px;background:rgba(255,255,255,0.08);color:var(--text);resize:vertical;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>处置人</label>
+                <input type="text" id="processor" value="值班员A" readonly>
+            </div>
+            <div class="form-group">
+                <label>处置时间</label>
+                <input type="datetime-local" id="processTime">
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-danger" onclick="closeProcessModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存登记</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 模态框控制
+    let currentProcessRow = null;
+
+    function showRouteModal() {
+        document.getElementById('routeModal').style.display = 'block';
+        document.getElementById('routeForm').reset();
+    }
+    function closeRouteModal() {
+        document.getElementById('routeModal').style.display = 'none';
+    }
+    function showPublishModal() {
+        document.getElementById('publishModal').style.display = 'block';
+        document.getElementById('publishForm').reset();
+    }
+    function closePublishModal() {
+        document.getElementById('publishModal').style.display = 'none';
+    }
+    function showProcessModal(btn) {
+        currentProcessRow = btn.closest('tr');
+        document.getElementById('processModal').style.display = 'block';
+        document.getElementById('processForm').reset();
+        document.getElementById('processTime').value = new Date().toISOString().slice(0, 16);
+    }
+    function closeProcessModal() {
+        document.getElementById('processModal').style.display = 'none';
+        currentProcessRow = null;
+    }
+
+    // 行程偏离设定保存
+    document.getElementById('routeForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const tbody = document.getElementById('routeTable').querySelector('tbody');
+        const tr = tbody.insertRow();
+        tr.innerHTML = `
+                <td>${document.getElementById('teamCode').value}</td>
+                <td>${document.getElementById('routeName').value}</td>
+                <td>${document.getElementById('deviationThreshold').value}</td>
+                <td>${document.getElementById('durationThreshold').value}</td>
+                <td><span class="status-badge status-approved">启用</span></td>
+                <td>
+                    <button class="btn btn-edit" onclick="editRoute(this)">编辑</button>
+                    <button class="btn btn-delete" onclick="delRoute(this)">删除</button>
+                </td>
+            `;
+        closeRouteModal();
+    });
+
+    // 发布申请提交
+    document.getElementById('publishForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        alert('发布申请已提交，等待值班领导审核！');
+        closePublishModal();
+        // 这里可以添加实际的数据提交逻辑
+    });
+
+    // 处置登记提交
+    document.getElementById('processForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (currentProcessRow) {
+            currentProcessRow.cells[4].innerHTML = '<span class="status-badge status-processed">已处置</span>';
+        }
+        alert('处置信息已登记！');
+        closeProcessModal();
+    });
+
+    // 发布审核功能
+    function approvePublish(btn) {
+        const row = btn.closest('tr');
+        row.cells[5].innerHTML = '<span class="status-badge status-approved">已通过</span>';
+        btn.disabled = true;
+        btn.nextElementSibling.disabled = true;
+        alert('已审核通过，将推送至信息发布系统！');
+    }
+    function rejectPublish(btn) {
+        const row = btn.closest('tr');
+        row.cells[5].innerHTML = '<span class="status-badge status-rejected">已拒绝</span>';
+        btn.previousElementSibling.disabled = true;
+        btn.disabled = true;
+        alert('已拒绝该发布申请！');
+    }
+
+    // 处置完成功能
+    function completeProcess(btn) {
+        const row = btn.closest('tr');
+        row.cells[4].innerHTML = '<span class="status-badge status-success">已完成</span>';
+        btn.disabled = true;
+        btn.previousElementSibling.disabled = true;
+        alert('告警处置已完成！');
+    }
+
+    // 行程编辑功能
+    function editRoute(btn) {
+        alert('编辑功能：可修改偏离阈值和持续时间');
+    }
+    function delRoute(btn) {
+        if (confirm('确定删除该行程设定？')) {
+            btn.closest('tr').remove();
+        }
+    }
+
+    // 阈值设定功能
+    function saveThresholds() {
+        const thresholds = {
+            tourist: document.getElementById('touristPercent').value,
+            parking: document.getElementById('parkingPercent').value,
+            hotel: document.getElementById('hotelPercent').value,
+            cable: document.getElementById('cableTime').value
+        };
+        localStorage.setItem('alertThresholds', JSON.stringify(thresholds));
+        alert('阈值设定已保存！');
+    }
+    function resetThresholds() {
+        if (confirm('确定重置为默认值？')) {
+            document.getElementById('touristPercent').value = 80;
+            document.getElementById('parkingPercent').value = 85;
+            document.getElementById('hotelPercent').value = 90;
+            document.getElementById('cableTime').value = 30;
+        }
+    }
+
+    // 历史记录模态框
+    function showHistoryModal() {
+        alert('发布历史功能：可查看已发布的告警信息记录');
+    }
+
+    // 页面加载时读取保存的阈值
+    window.onload = function() {
+        const saved = localStorage.getItem('alertThresholds');
+        if (saved) {
+            const thresholds = JSON.parse(saved);
+            document.getElementById('touristPercent').value = thresholds.tourist;
+            document.getElementById('parkingPercent').value = thresholds.parking;
+            document.getElementById('hotelPercent').value = thresholds.hotel;
+            document.getElementById('cableTime').value = thresholds.cable;
+        }
+    };
+
+    // 点击模态框外部关闭
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+            event.target.style.display = 'none';
+        }
+    };
+
+    // 页面加载动画
+    document.addEventListener('DOMContentLoaded',()=>{
+        document.querySelectorAll('.card').forEach((c,i)=>{
+            c.style.opacity = '0';
+            c.style.transform = 'translateY(20px)';
+            setTimeout(()=>{
+                c.style.transition = 'opacity 0.5s, transform 0.5s';
+                c.style.opacity = '1';
+                c.style.transform = 'translateY(0)';
+            },i*100);
+        });
+    });
+</script>
+</body>
+</html>
