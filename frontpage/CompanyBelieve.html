@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业诚信档案管理平台</title>
+    <style>
+        :root {
+            --primary: #00c6ff;
+            --secondary: #0072ff;
+            --dark: #0f2027;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --text: #e6f7ff;
+            --danger: #ff4d4f;
+            --success: #52c41a;
+            --warning: #faad14;
+            --info: #1890ff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: var(--text);
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+        .header {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            padding: 1.2rem 2rem;
+            border-bottom: 1px solid var(--glass-border);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header h1 {
+            font-size: 2rem;
+            text-align: center;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px var(--primary);
+        }
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .section {
+            margin-bottom: 3rem;
+        }
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .card {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-4px);
+        }
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            margin: 0 0.2rem;
+        }
+        .btn-add {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-edit {
+            background: var(--warning);
+            color: #fff;
+        }
+        .btn-delete {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 198, 255, 0.3);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        th {
+            background: rgba(0, 198, 255, 0.15);
+            color: var(--primary);
+        }
+        tr:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: linear-gradient(135deg, #203a43, #2c5364);
+            margin: 3% auto;
+            padding: 2rem;
+            border-radius: 16px;
+            width: 800px;
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        .modal-header {
+            font-size: 1.3rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .close {
+            color: #aaa;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close:hover {
+            color: var(--primary);
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .score-badge {
+            padding: 0.25rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            color: #fff;
+            font-weight: bold;
+        }
+        .score-excellent {
+            background: var(--success);
+        }
+        .score-good {
+            background: var(--info);
+        }
+        .score-fair {
+            background: var(--warning);
+        }
+        .score-poor {
+            background: var(--danger);
+        }
+        .level-aaa {
+            color: #ffd700;
+            font-weight: bold;
+        }
+        .level-aa {
+            color: #c0c0c0;
+            font-weight: bold;
+        }
+        .level-a {
+            color: #cd7f32;
+            font-weight: bold;
+        }
+        .level-b {
+            color: #888;
+        }
+        .level-c {
+            color: var(--danger);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            color: #aaa;
+            margin-top: 0.5rem;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 2rem;
+            margin-top: 1rem;
+        }
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0.5rem;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--glass-border);
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.75rem;
+            top: 0.75rem;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--primary);
+        }
+        .timeline-time {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+        .timeline-content {
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+<header class="header">
+    <h1>🏢 企业诚信档案管理平台</h1>
+</header>
+
+<div class="container">
+    <!-- 诚信统计概览 -->
+    <section class="section">
+        <h2 class="section-title">📊 诚信统计概览</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalEnterprises">156</div>
+                <div class="stat-label">建档企业总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="aaaEnterprises">23</div>
+                <div class="stat-label">AAA级企业</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="投诉总量">128</div>
+                <div class="stat-label">本月投诉总量</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="avgScore">85.6</div>
+                <div class="stat-label">平均诚信分数</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 新增诚信档案 -->
+    <section class="section">
+        <h2 class="section-title">📝 新增诚信档案</h2>
+        <div class="card">
+            <button class="btn btn-add" onclick="showArchiveModal()">➕ 新增档案</button>
+            <div class="form-grid" style="margin-top:1rem;">
+                <div class="form-group">
+                    <label>企业名称</label>
+                    <input type="text" id="enterpriseName">
+                </div>
+                <div class="form-group">
+                    <label>统一社会信用代码</label>
+                    <input type="text" id="creditCode">
+                </div>
+                <div class="form-group">
+                    <label>企业类型</label>
+                    <select id="enterpriseType">
+                        <option value="旅行社">旅行社</option>
+                        <option value="景区">景区</option>
+                        <option value="酒店">酒店</option>
+                        <option value="导游">导游</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>法定代表人</label>
+                    <input type="text" id="legalRepresentative">
+                </div>
+                <div class="form-group">
+                    <label>联系电话</label>
+                    <input type="tel" id="contactPhone">
+                </div>
+                <div class="form-group">
+                    <label>注册地址</label>
+                    <input type="text" id="registeredAddress">
+                </div>
+                <div class="form-group">
+                    <label>初始诚信等级</label>
+                    <select id="initialLevel">
+                        <option value="AAA">AAA</option>
+                        <option value="AA">AA</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                    </select>
+                </div>
+                <div class="form-group full-width">
+                    <label>企业简介</label>
+                    <textarea id="enterpriseDescription" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn btn-primary" onclick="saveArchive()">保存档案</button>
+                <button class="btn btn-warning" onclick="resetArchiveForm()">重置</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 诚信档案列表 -->
+    <section class="section">
+        <h2 class="section-title">📋 诚信档案列表</h2>
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <div>
+                    <input type="text" placeholder="搜索企业名称或代码" style="padding:0.5rem; border:1px solid var(--glass-border); border-radius:4px; background:rgba(255,255,255,0.08); color:var(--text);">
+                    <button class="btn btn-primary" onclick="searchArchive()">搜索</button>
+                </div>
+                <div>
+                    <select id="levelFilter" onchange="filterByLevel()">
+                        <option value="">全部等级</option>
+                        <option value="AAA">AAA</option>
+                        <option value="AA">AA</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                    </select>
+                </div>
+            </div>
+            <table id="archiveTable">
+                <thead>
+                <tr>
+                    <th>企业名称</th>
+                    <th>类型</th>
+                    <th>诚信等级</th>
+                    <th>诚信分数</th>
+                    <th>投诉次数</th>
+                    <th>处理率</th>
+                    <th>评价时间</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>黄山国际旅行社</td>
+                    <td>旅行社</td>
+                    <td><span class="level-aaa">AAA</span></td>
+                    <td><span class="score-badge score-excellent">92</span></td>
+                    <td>12</td>
+                    <td>100%</td>
+                    <td>2024-05-30</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="showDetailModal(this)">详情</button>
+                        <button class="btn btn-primary" onclick="showComplaintModal(this)">关联投诉</button>
+                        <button class="btn btn-warning" onclick="showEvaluateModal(this)">重新评价</button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>黄山风景区</td>
+                    <td>景区</td>
+                    <td><span class="level-aa">AA</span></td>
+                    <td><span class="score-badge score-good">85</span></td>
+                    <td>28</td>
+                    <td>96.4%</td>
+                    <td>2024-05-28</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="showDetailModal(this)">详情</button>
+                        <button class="btn btn-primary" onclick="showComplaintModal(this)">关联投诉</button>
+                        <button class="btn btn-warning" onclick="showEvaluateModal(this)">重新评价</button>
+                    </td>
+                </tr>
+                <tr class="priority-medium">
+                    <td>宏村某酒店</td>
+                    <td>酒店</td>
+                    <td><span class="level-b">B</span></td>
+                    <td><span class="score-badge score-fair">68</span></td>
+                    <td>45</td>
+                    <td>88.9%</td>
+                    <td>2024-05-25</td>
+                    <td>
+                        <button class="btn btn-edit" onclick="showDetailModal(this)">详情</button>
+                        <button class="btn btn-primary" onclick="showComplaintModal(this)">关联投诉</button>
+                        <button class="btn btn-warning" onclick="showEvaluateModal(this)">重新评价</button>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- 关联投诉信息 -->
+    <section class="section">
+        <h2 class="section-title">🔗 关联投诉信息</h2>
+        <div class="card">
+            <div class="section-title">黄山国际旅行社 - 投诉记录</div>
+            <table id="complaintTable">
+                <thead>
+                <tr>
+                    <th>投诉编号</th>
+                    <th>投诉时间</th>
+                    <th>投诉类型</th>
+                    <th>处理状态</th>
+                    <th>处理结果</th>
+                    <th>满意度</th>
+                    <th>影响分数</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>C202405001</td>
+                    <td>2024-05-01</td>
+                    <td>服务质量</td>
+                    <td><span class="status-badge status-completed">已完成</span></td>
+                    <td>已解决</td>
+                    <td>⭐⭐⭐⭐⭐</td>
+                    <td>-1</td>
+                </tr>
+                <tr>
+                    <td>C202405015</td>
+                    <td>2024-05-15</td>
+                    <td>行程安排</td>
+                    <td><span class="status-badge status-completed">已完成</span></td>
+                    <td>部分解决</td>
+                    <td>⭐⭐⭐</td>
+                    <td>-3</td>
+                </tr>
+                </tbody>
+            </table>
+            <div style="margin-top:1rem; padding:1rem; background:rgba(255,255,255,0.05); border-radius:6px;">
+                <strong>诚信评价说明：</strong>
+                <ul style="margin-top:0.5rem; padding-left:1.5rem;">
+                    <li>每起已解决且满意度≥4星的投诉，扣1分</li>
+                    <li>每起部分解决或满意度≤3星的投诉，扣3分</li>
+                    <li>每起未解决或投诉人撤诉的投诉，扣5分</li>
+                    <li>处理率低于90%，额外扣10分</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 诚信评价详情 -->
+    <section class="section">
+        <h2 class="section-title">📊 诚信评价详情</h2>
+        <div class="grid-2">
+            <div class="card">
+                <div class="section-title">评分构成</div>
+                <div class="timeline" id="scoreTimeline">
+                    <div class="timeline-item">
+                        <div class="timeline-time">基础分：100</div>
+                        <div class="timeline-content">初始诚信评分</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">投诉处理：-4</div>
+                        <div class="timeline-content">2起投诉，处理良好</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">处理率加分：+2</div>
+                        <div class="timeline-content">处理率100%</div>
+                    </div>
+                    <div class="timeline-item">
+                        <div class="timeline-time">满意度加分：+3</div>
+                        <div class="timeline-content">平均满意度4.5星</div>
+                    </div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="section-title">历史评价记录</div>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>评价时间</th>
+                        <th>诚信等级</th>
+                        <th>诚信分数</th>
+                        <th>评价人</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td>2024-05-30</td>
+                        <td><span class="level-aaa">AAA</span></td>
+                        <td><span class="score-badge score-excellent">92</span></td>
+                        <td>系统评价</td>
+                    </tr>
+                    <tr>
+                        <td>2024-04-30</td>
+                        <td><span class="level-aaa">AAA</span></td>
+                        <td><span class="score-badge score-excellent">94</span></td>
+                        <td>系统评价</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+<!-- 档案详情模态框 -->
+<div id="detailModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>诚信档案详情</span>
+            <span class="close" onclick="closeDetailModal()">&times;</span>
+        </div>
+        <div id="detailContent"></div>
+        <div class="modal-buttons">
+            <button class="btn btn-primary" onclick="printDetail()">打印</button>
+            <button class="btn btn-danger" onclick="closeDetailModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 关联投诉模态框 -->
+<div id="complaintModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>关联投诉记录</span>
+            <span class="close" onclick="closeComplaintModal()">&times;</span>
+        </div>
+        <div id="complaintContent"></div>
+        <div class="modal-buttons">
+            <button class="btn btn-primary" onclick="addComplaint()">新增关联</button>
+            <button class="btn btn-danger" onclick="closeComplaintModal()">关闭</button>
+        </div>
+    </div>
+</div>
+
+<!-- 重新评价模态框 -->
+<div id="evaluateModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <span>诚信重新评价</span>
+            <span class="close" onclick="closeEvaluateModal()">&times;</span>
+        </div>
+        <form id="evaluateForm">
+            <div class="form-group">
+                <label>当前诚信分数</label>
+                <input type="number" id="currentScore" readonly>
+            </div>
+            <div class="form-group">
+                <label>新诚信分数</label>
+                <input type="number" id="newScore" min="0" max="100" required>
+            </div>
+            <div class="form-group">
+                <label>新诚信等级</label>
+                <select id="newLevel" required>
+                    <option value="AAA">AAA</option>
+                    <option value="AA">AA</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                    <option value="C">C</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>评价说明</label>
+                <textarea id="evaluateDescription" rows="3"></textarea>
+            </div>
+            <div class="modal-buttons">
+                <button type="button" class="btn btn-danger" onclick="closeEvaluateModal()">取消</button>
+                <button type="submit" class="btn btn-primary">保存评价</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 模态框控制
+    let currentDetailRow = null;
+    let currentComplaintRow = null;
+    let currentEvaluateRow = null;
+
+    function showArchiveModal() {
+        document.getElementById('detailModal').style.display = 'block';
+        // 填充新建档案表单
+        document.getElementById('detailContent').innerHTML = `
+        <div class="form-grid">
+          <div class="form-group">
+            <label>企业名称</label>
+            <input type="text" id="modalEnterpriseName" required>
+          </div>
+          <div class="form-group">
+            <label>统一社会信用代码</label>
+            <input type="text" id="modalCreditCode" required>
+          </div>
+          <div class="form-group">
+            <label>企业类型</label>
+            <select id="modalEnterpriseType" required>
+              <option value="旅行社">旅行社</option>
+              <option value="景区">景区</option>
+              <option value="酒店">酒店</option>
+              <option value="导游">导游</option>
+              <option value="其他">其他</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>法定代表人</label>
+            <input type="text" id="modalLegalRepresentative">
+          </div>
+          <div class="form-group">
+            <label>联系电话</label>
+            <input type="tel" id="modalContactPhone">
+          </div>
+          <div class="form-group">
+            <label>注册地址</label>
+            <input type="text" id="modalRegisteredAddress">
+          </div>
+          <div class="form-group">
+            <label>初始诚信等级</label>
+            <select id="modalInitialLevel">
+              <option value="AAA">AAA</option>
+              <option value="AA">AA</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+          </div>
+          <div class="form-group full-width">
+            <label>企业简介</label>
+            <textarea id="modalEnterpriseDescription" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button type="button" class="btn btn-primary" onclick="saveNewArchive()">保存档案</button>
+          <button type="button" class="btn btn-danger" onclick="closeDetailModal()">取消</button>
+        </div>
+      `;
+    }
+
+    function showDetailModal(btn) {
+        currentDetailRow = btn.closest('tr');
+        document.getElementById('detailModal').style.display = 'block';
+        const cells = currentDetailRow.cells;
+        document.getElementById('detailContent').innerHTML = `
+        <div class="form-grid">
+          <div class="form-group">
+            <label>企业名称</label>
+            <input type="text" value="${cells[0].textContent}" readonly>
+          </div>
+          <div class="form-group">
+            <label>企业类型</label>
+            <input type="text" value="${cells[1].textContent}" readonly>
+          </div>
+          <div class="form-group">
+            <label>诚信等级</label>
+            <input type="text" value="${cells[2].textContent}" readonly>
+          </div>
+          <div class="form-group">
+            <label>诚信分数</label>
+            <input type="text" value="${cells[3].textContent}" readonly>
+          </div>
+          <div class="form-group">
+            <label>投诉次数</label>
+            <input type="text" value="${cells[4].textContent}" readonly>
+          </div>
+          <div class="form-group">
+            <label>处理率</label>
+            <input type="text" value="${cells[5].textContent}" readonly>
+          </div>
+          <div class="form-group">
+            <label>评价时间</label>
+            <input type="text" value="${cells[6].textContent}" readonly>
+          </div>
+        </div>
+        <div style="margin-top:1rem;">
+          <h4>诚信评价记录</h4>
+          <table style="margin-top:0.5rem;">
+            <thead>
+              <tr>
+                <th>评价时间</th>
+                <th>诚信等级</th>
+                <th>诚信分数</th>
+                <th>评价人</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2024-05-30</td>
+                <td>${cells[2].textContent}</td>
+                <td>${cells[3].textContent}</td>
+                <td>系统评价</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function showComplaintModal(btn) {
+        currentComplaintRow = btn.closest('tr');
+        document.getElementById('complaintModal').style.display = 'block';
+        const enterpriseName = currentComplaintRow.cells[0].textContent;
+        document.getElementById('complaintContent').innerHTML = `
+        <div class="section-title">${enterpriseName} - 关联投诉记录</div>
+        <table style="width:100%;">
+          <thead>
+            <tr>
+              <th>投诉编号</th>
+              <th>投诉时间</th>
+              <th>投诉类型</th>
+              <th>处理状态</th>
+              <th>满意度</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="modalComplaintList">
+            <tr>
+              <td>C202405001</td>
+              <td>2024-05-01</td>
+              <td>服务质量</td>
+              <td><span class="status-badge status-completed">已完成</span></td>
+              <td>⭐⭐⭐⭐⭐</td>
+              <td>
+                <button class="btn btn-edit" onclick="viewComplaintDetail(this)">详情</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      `;
+    }
+
+    function showEvaluateModal(btn) {
+        currentEvaluateRow = btn.closest('tr');
+        document.getElementById('evaluateModal').style.display = 'block';
+        const scoreCell = currentEvaluateRow.cells[3];
+        const levelCell = currentEvaluateRow.cells[2];
+        document.getElementById('currentScore').value = scoreCell.textContent;
+        document.getElementById('newScore').value = scoreCell.textContent;
+        document.getElementById('newLevel').value = levelCell.textContent;
+    }
+
+    function closeDetailModal() {
+        document.getElementById('detailModal').style.display = 'none';
+    }
+
+    function closeComplaintModal() {
+        document.getElementById('complaintModal').style.display = 'none';
+    }
+
+    function closeEvaluateModal() {
+        document.getElementById('evaluateModal').style.display = 'none';
+    }
+
+    // 保存新档案
+    function saveNewArchive() {
+        const name = document.getElementById('modalEnterpriseName').value;
+        const type = document.getElementById('modalEnterpriseType').value;
+        const level = document.getElementById('modalInitialLevel').value;
+        if (!name || !type || !level) {
+            alert('请填写完整信息');
+            return;
+        }
+        const table = document.getElementById('archiveTable').querySelector('tbody');
+        const newRow = table.insertRow(0);
+        newRow.innerHTML = `
+        <td>${name}</td>
+        <td>${type}</td>
+        <td><span class="level-${level.toLowerCase()}">${level}</span></td>
+        <td><span class="score-badge score-good">85</span></td>
+        <td>0</td>
+        <td>100%</td>
+        <td>${new Date().toLocaleDateString('zh-CN')}</td>
+        <td>
+          <button class="btn btn-edit" onclick="showDetailModal(this)">详情</button>
+          <button class="btn btn-primary" onclick="showComplaintModal(this)">关联投诉</button>
+          <button class="btn btn-warning" onclick="showEvaluateModal(this)">重新评价</button>
+        </td>
+      `;
+        closeDetailModal();
+        updateStats();
+        alert('诚信档案已创建！');
+    }
+
+    // 保存评价
+    document.getElementById('evaluateForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (currentEvaluateRow) {
+            const newScore = document.getElementById('newScore').value;
+            const newLevel = document.getElementById('newLevel').value;
+            const description = document.getElementById('evaluateDescription').value;
+
+            currentEvaluateRow.cells[2].innerHTML = `<span class="level-${newLevel.toLowerCase()}">${newLevel}</span>`;
+            currentEvaluateRow.cells[3].innerHTML = `<span class="score-badge score-${newScore >= 90 ? 'excellent' : newScore >= 80 ? 'good' : newScore >= 70 ? 'fair' : 'poor'}">${newScore}</span>`;
+            currentEvaluateRow.cells[6].textContent = new Date().toLocaleDateString('zh-CN');
+        }
+        closeEvaluateModal();
+        alert('诚信评价已更新！');
+    });
+
+    // 查看投诉详情
+    function viewComplaintDetail(btn) {
+        alert('投诉详情：C202405001 - 服务质量投诉，已妥善解决，游客满意。');
+    }
+
+    // 新增关联投诉
+    function addComplaint() {
+        alert('新增关联投诉功能：可从投诉库中选择相关投诉进行关联。');
+    }
+
+    // 搜索档案
+    function searchArchive() {
+        const searchTerm = document.querySelector('input[placeholder="搜索企业名称或代码"]').value.toLowerCase();
+        const rows = document.getElementById('archiveTable').querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const name = row.cells[0].textContent.toLowerCase();
+            row.style.display = name.includes(searchTerm) ? '' : 'none';
+        });
+    }
+
+    // 按等级筛选
+    function filterByLevel() {
+        const level = document.getElementById('levelFilter').value;
+        const rows = document.getElementById('archiveTable').querySelectorAll('tbody tr');
+        rows.forEach(row => {
+            const rowLevel = row.cells[2].textContent.trim();
+            row.style.display = !level || rowLevel === level ? '' : 'none';
+        });
+    }
+
+    // 打印详情
+    function printDetail() {
+        window.print();
+    }
+
+    // 更新统计数据
+    function updateStats() {
+        const rows = document.getElementById('archiveTable').querySelectorAll('tbody tr');
+        let aaaCount = 0;
+        rows.forEach(row => {
+            const level = row.cells[2].textContent.trim();
+            if (level === 'AAA') aaaCount++;
+        });
+        document.getElementById('totalEnterprises').textContent = rows.length;
+        document.getElementById('aaaEnterprises').textContent = aaaCount;
+    }
+
+    // 重置表单
+    function resetArchiveForm() {
+        document.getElementById('enterpriseName').value = '';
+        document.getElementById('creditCode').value = '';
+        document.getElementById('legalRepresentative').value = '';
+        document.getElementById('contactPhone').value = '';
+        document.getElementById('registeredAddress').value = '';
+        document.getElementById('enterpriseDescription').value = '';
+    }
+
+    // 页面加载动画
+    document.addEventListener('DOMContentLoaded',()=>{
+        document.querySelectorAll('.card').forEach((c,i)=>{
+            c.style.opacity = '0';
+            c.style.transform = 'translateY(20px)';
+            setTimeout(()=>{
+                c.style.transition = 'opacity 0.5s, transform 0.5s';
+                c.style.opacity = '1';
+                c.style.transform = 'translateY(0)';
+            },i*100);
+        });
+    });
+</script>
+</body>
+</html>
