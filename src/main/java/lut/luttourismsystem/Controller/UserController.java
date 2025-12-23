@@ -14,20 +14,14 @@ public class UserController {
     @Autowired
     private UserService userService;
 
-    /**
-     * 获取所有用户
-     * GET /users
-     */
+
     @GetMapping
     public ResponseEntity<Iterable<User>> getAllUsers() {
         Iterable<User> users = userService.findAllUsers();
         return ResponseEntity.ok(users);
     }
 
-    /**
-     * 根据ID获取单个用户
-     * GET /users/{id}
-     */
+
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable int id) {
         try {
@@ -38,20 +32,14 @@ public class UserController {
         }
     }
 
-    /**
-     * 创建新用户
-     * POST /users
-     */
+
     @PostMapping
     public ResponseEntity<User> createUser(@RequestBody User user) {
         userService.addUser(user);
         return ResponseEntity.status(HttpStatus.CREATED).body(user);
     }
 
-    /**
-     * 更新用户信息
-     * PUT /users/{id}
-     */
+
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable int id, @RequestBody User user) {
         try {
@@ -66,10 +54,7 @@ public class UserController {
         }
     }
 
-    /**
-     * 删除用户
-     * DELETE /users/{id}
-     */
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable int id) {
         try {

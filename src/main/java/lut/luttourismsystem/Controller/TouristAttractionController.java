@@ -20,10 +20,7 @@ public class TouristAttractionController {
         return ResponseEntity.ok(touristAttractions);
     }
 
-    /**
-     * 根据ID获取单个用户
-     * GET /users/{id}
-     */
+
     @GetMapping("/{id}")
     public ResponseEntity<TouristAttraction> getTouristAttractionById(@PathVariable int id) {
         try {
@@ -34,20 +31,14 @@ public class TouristAttractionController {
         }
     }
 
-    /**
-     * 创建新用户
-     * POST /users
-     */
+
     @PostMapping
     public ResponseEntity<TouristAttraction> createTouristAttraction(@RequestBody TouristAttraction touristAttraction) {
         touristAttractionService.addTouristattraction(touristAttraction);
         return ResponseEntity.status(HttpStatus.CREATED).body(touristAttraction);
     }
 
-    /**
-     * 更新用户信息
-     * PUT /users/{id}
-     */
+
     @PutMapping("/{id}")
     public ResponseEntity<TouristAttraction> updateUser(@PathVariable int id, @RequestBody TouristAttraction touristAttraction) {
         try {
@@ -62,10 +53,7 @@ public class TouristAttractionController {
         }
     }
 
-    /**
-     * 删除用户
-     * DELETE /users/{id}
-     */
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable int id) {
         try {

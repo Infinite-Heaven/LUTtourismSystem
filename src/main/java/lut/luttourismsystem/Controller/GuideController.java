@@ -16,20 +16,14 @@ public class GuideController {
     @Autowired
      GuideService guideService;
 
-        /**
-         * 获取所有用户
-         * GET /users
-         */
+
         @GetMapping
         public ResponseEntity<Iterable<Guide>> getAllUsers() {
             Iterable<Guide> guides = guideService.findAllGuides();
             return ResponseEntity.ok(guides);
         }
 
-        /**
-         * 根据ID获取单个用户
-         * GET /users/{id}
-         */
+
         @GetMapping("/{id}")
         public ResponseEntity<Guide> getGuideById(@PathVariable int id) {
             try {
@@ -40,20 +34,14 @@ public class GuideController {
             }
         }
 
-        /**
-         * 创建新用户
-         * POST /users
-         */
+
         @PostMapping
         public ResponseEntity<Guide> createGuide(@RequestBody Guide guide) {
             guideService.addGuide(guide);
             return ResponseEntity.status(HttpStatus.CREATED).body(guide);
         }
 
-        /**
-         * 更新用户信息
-         * PUT /users/{id}
-         */
+
         @PutMapping("/{id}")
         public ResponseEntity<Guide> updateGuide(@PathVariable int id, @RequestBody Guide guide) {
             try {
@@ -68,10 +56,7 @@ public class GuideController {
             }
         }
 
-        /**
-         * 删除用户
-         * DELETE /users/{id}
-         */
+
         @DeleteMapping("/{id}")
         public ResponseEntity<Void> deleteGuide(@PathVariable int id) {
             try {

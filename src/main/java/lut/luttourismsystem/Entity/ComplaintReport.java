@@ -11,9 +11,11 @@ public class ComplaintReport {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     int ReportId;
-
+    //投诉内容
     String Content;
+    //投诉渠道
     String ComplaintChannel;
+    //投诉日期
     String Date;
 
 

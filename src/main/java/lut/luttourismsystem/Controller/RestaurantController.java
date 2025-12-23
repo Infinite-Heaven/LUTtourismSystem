@@ -13,20 +13,14 @@ public class RestaurantController {
     @Autowired
     private RestaurantService restaurantService;
 
-    /**
-     * 获取所有用户
-     * GET /users
-     */
+
     @GetMapping
     public ResponseEntity<Iterable<Restaurant>> getAllRestaurants() {
         Iterable<Restaurant> restaurant = restaurantService.findAllRestaurants();
         return ResponseEntity.ok(restaurant);
     }
 
-    /**
-     * 根据ID获取单个用户
-     * GET /users/{id}
-     */
+
     @GetMapping("/{id}")
     public ResponseEntity<Restaurant> getRestaurantById(@PathVariable int id) {
         try {
@@ -37,20 +31,14 @@ public class RestaurantController {
         }
     }
 
-    /**
-     * 创建新用户
-     * POST /users
-     */
+
     @PostMapping
     public ResponseEntity<Restaurant> createRestaurant(@RequestBody Restaurant restaurant) {
         restaurantService.addRestaurant(restaurant);
         return ResponseEntity.status(HttpStatus.CREATED).body(restaurant);
     }
 
-    /**
-     * 更新用户信息
-     * PUT /users/{id}
-     */
+
     @PutMapping("/{id}")
     public ResponseEntity<Restaurant> updateRestaurant(@PathVariable int id, @RequestBody Restaurant restaurant) {
         try {
@@ -65,10 +53,6 @@ public class RestaurantController {
         }
     }
 
-    /**
-     * 删除用户
-     * DELETE /users/{id}
-     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRestaurant(@PathVariable int id) {
         try {

@@ -13,20 +13,14 @@ public class ComplaintReportController {
     @Autowired
     private ComplaintReportService complaintReportService;
 
-    /**
-     * 获取所有用户
-     * GET /users
-     */
+
     @GetMapping
     public ResponseEntity<Iterable<ComplaintReport>> getAllComplaintReport() {
         Iterable<ComplaintReport> complaintReport = complaintReportService.findAllComplaintReport();
         return ResponseEntity.ok(complaintReport);
     }
 
-    /**
-     * 根据ID获取单个用户
-     * GET /users/{id}
-     */
+
     @GetMapping("/{id}")
     public ResponseEntity<ComplaintReport> getComplaintReportById(@PathVariable int id) {
         try {
@@ -37,20 +31,14 @@ public class ComplaintReportController {
         }
     }
 
-    /**
-     * 创建新用户
-     * POST /users
-     */
+
     @PostMapping
     public ResponseEntity<ComplaintReport> createComplaintReport(@RequestBody ComplaintReport complaintReport) {
         complaintReportService.addComplaintReport(complaintReport);
         return ResponseEntity.status(HttpStatus.CREATED).body(complaintReport);
     }
 
-    /**
-     * 更新用户信息
-     * PUT /users/{id}
-     */
+
     @PutMapping("/{id}")
     public ResponseEntity<ComplaintReport> updateComplaintReport(@PathVariable int id, @RequestBody ComplaintReport complaintReport) {
         try {
@@ -65,10 +53,7 @@ public class ComplaintReportController {
         }
     }
 
-    /**
-     * 删除用户
-     * DELETE /users/{id}
-     */
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable int id) {
         try {
