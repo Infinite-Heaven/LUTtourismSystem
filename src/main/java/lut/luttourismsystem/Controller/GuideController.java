@@ -18,7 +18,7 @@ public class GuideController {
 
 
         @GetMapping
-        public ResponseEntity<Iterable<Guide>> getAllUsers() {
+        public ResponseEntity<Iterable<Guide>> getAllGuides() {
             Iterable<Guide> guides = guideService.findAllGuides();
             return ResponseEntity.ok(guides);
         }

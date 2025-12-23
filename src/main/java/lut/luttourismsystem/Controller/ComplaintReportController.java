@@ -55,7 +55,7 @@ public class ComplaintReportController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable int id) {
+    public ResponseEntity<Void> deleteComplaintReport(@PathVariable int id) {
         try {
             // 检查用户是否存在
             complaintReportService.findComplaintReport(id);

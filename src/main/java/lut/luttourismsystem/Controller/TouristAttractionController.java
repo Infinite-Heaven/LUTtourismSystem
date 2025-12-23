@@ -40,7 +40,7 @@ public class TouristAttractionController {
 
 
     @PutMapping("/{id}")
-    public ResponseEntity<TouristAttraction> updateUser(@PathVariable int id, @RequestBody TouristAttraction touristAttraction) {
+    public ResponseEntity<TouristAttraction> updateTouristAttraction(@PathVariable int id, @RequestBody TouristAttraction touristAttraction) {
         try {
             // 检查用户是否存在
             touristAttractionService.findTouristattraction(id);
@@ -55,7 +55,7 @@ public class TouristAttractionController {
 
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable int id) {
+    public ResponseEntity<Void> deleteTouristAttraction(@PathVariable int id) {
         try {
             // 检查用户是否存在
             touristAttractionService.findTouristattraction(id);
