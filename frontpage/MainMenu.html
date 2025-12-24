@@ -266,6 +266,7 @@
                 }
             }
         <img src="wangbujianwang.jpg" height="429" width="864"/><img src="wangbujianwang.jpg" height="429" width="864"/></style>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 
 
@@ -337,18 +338,7 @@
                         <div class="data-number" id = "tourist" >23,847</div>
                         <div class="data-label">当前游客数量</div>
                     </div>
-                    <div class="data-item">
-                            <script>
-                                $.ajax({
-                                    type:"get",
-                                    url:"http://localhost:8080/tourist/12000",
-                                    dataType:"json",
-                                    success:function(response){
-                                        var res = JSON.parse(response);
-                                        document.getElementById("tourist").innerHTML = res.tourist;
-                                    }
-                                });
-                            </script>
+                </div>
 
 
 <!--                    <div class="real-time-data" id="touristPanel">-->
@@ -536,12 +526,49 @@ value">刚刚</div>
     alert(`正在跳转到${page}页面...`);
     }
 
-    // 定时更新数据
-    setInterval(updateRealTimeData, 5000);
+    // 从后端获取景区当前人数
+    function loadTouristCount() {
+        $.ajax({
+            type: "GET",
+            url: "http://localhost:8080/tourist/1",
+            dataType: "json",
+            success: function(response) {
+                console.log('获取到的景区数据:', response);
+                // jQuery 的 dataType:"json" 已经自动解析了 JSON，response 已经是对象
+                // 尝试不同的属性名（因为 Jackson 可能将 CurrentCapacity 转换为 currentCapacity）
+                let currentCapacity = response.CurrentCapacity || response.currentCapacity;
+                
+                if (currentCapacity !== undefined && currentCapacity !== null) {
+                    // 格式化数字，添加千位分隔符
+                    const formattedCount = parseInt(currentCapacity).toLocaleString();
+                    document.getElementById("tourist").innerHTML = formattedCount;
+                    console.log('成功更新游客数量:', formattedCount);
+                } else {
+                    console.error('响应数据中没有找到当前人数属性:', response);
+                    console.log('可用的属性:', Object.keys(response));
+                }
+            },
+            error: function(xhr, status, error) {
+                console.error('获取景区数据失败:', error);
+                console.error('状态码:', xhr.status);
+                console.error('响应内容:', xhr.responseText);
+                // 如果请求失败，可以显示默认值或错误提示
+                document.getElementById("tourist").innerHTML = '--';
+            }
+        });
+    }
+
+    // 定时更新数据（模拟数据更新，但优先使用真实数据）
+    // setInterval(updateRealTimeData, 5000);
 
     // 页面加载完成后的初始化
     document.addEventListener('DOMContentLoaded', function() {
     console.log('智慧旅游管理与调度系统已加载');
+
+    // 加载景区当前人数
+    loadTouristCount();
+    // 定时刷新景区人数（每5秒）
+    setInterval(loadTouristCount, 5000);
 
     // 添加一些交互效果
     const cards = document.querySelectorAll('.card');
