@@ -340,29 +340,28 @@
 <!--                    <div class="data-item">-->
                     <div class="real-time-data" id="touristPanel">
                         <div class="data-item">
-                            <!-- 先留空，后端拿到数据后再填 -->
-                            <div class="data-number" id="maxCapacity">--</div>
+                            <div class="data-number" id="touristCount">--</div>
                             <div class="data-label">当前游客数量</div>
                         </div>
                     </div>
 
                     <script>
-                        // 后端接口（改成你的真实地址）
-                        const TOURIST_API = 'http://localhost:8080/TouristAttraction/maxCapacity';   // ← 只改这一行
+                        // 后端接口（已换成你的地址）
+                        const TOURIST_API = 'http://localhost:8080/TouristAttraction/CurrentCapacity';
 
                         async function loadTourist() {
                             try {
                                 const res = await fetch(TOURIST_API);
-                                const data = await res.json();          // 假设后端返回 { count: 23847 }
-                                const count = data.count ?? 0;
-                                document.getElementById('maxCapacity').textContent = count.toLocaleString();
+                                const data = await res.json();          // 假设返回 { CurrentCapacity: 23847 }
+                                const count = data.CurrentCapacity ?? 0;
+                                document.getElementById('touristCount').textContent = count.toLocaleString();
                             } catch (e) {
                                 console.error('获取游客数量失败', e);
-                                document.getElementById('maxCapacity').textContent = '加载失败';
+                                document.getElementById('touristCount').textContent = '加载失败';
                             }
                         }
 
-                        // 首次加载 + 每 30 秒更新一次
+                        // 首次加载 + 每 30 秒更新
                         loadTourist();
                         setInterval(loadTourist, 30000);
                     </script>
