@@ -567,7 +567,7 @@ value">刚刚</div>
     });
   }
 
-  function loadTouristCount() {
+  function loadCarsCount() {
     $.ajax({
       type: "GET",
       url: "http://localhost:8080/tourist/1",
@@ -597,6 +597,9 @@ value">刚刚</div>
       }
     });
   }
+
+  loadCarsCount();
+  setInterval(loadTouristCount, 5000);
 
 
   // 定时更新数据（模拟数据更新，但优先使用真实数据）
