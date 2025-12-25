@@ -34,9 +34,9 @@
   <div class="left"></div>
   <div class="right">
     <h4>注 册</h4>
-    <form id="register-form" action="http://localhost:8080/user/register" method="POST">
-      <input class="acc" type="text" name="username" id="username" placeholder="用户名" required>
-      <input class="acc" type="password" name="password" id="password" placeholder="密码" required>
+    <form id="register-form" action="http://localhost:8080/users/1" method="POST">
+      <input class="acc" type="text" name="name" id="name" placeholder="用户名" required>
+      <input class="acc" type="password" name="psw" id="psw" placeholder="密码" required>
 <!--      <select class="role-select" name="role" id="role" required>-->
 <!--        <option value="">请选择角色</option>-->
 <!--        <option value="student">学生</option>-->
@@ -53,6 +53,7 @@
   </div>
 </div>
 
+</body>
 <script>
   document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('register-form');
@@ -61,11 +62,11 @@
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
 
-      const username = document.getElementById('username').value.trim();
-      const password = document.getElementById('password').value.trim();
-      const role = document.getElementById('role').value;
+      const name = document.getElementById('name').value.trim();
+      const psd = document.getElementById('psd').value.trim();
+      // const role = document.getElementById('role').value;
 
-      if (!username || !password) {
+      if (!name || !psd) {
         alert('用户名和密码不能为空');
         return;
       }
@@ -76,12 +77,12 @@
       }
 
       const payload = {
-        username: username,
-        password: password,
-        role: role
+        username: name,
+        password: psd,
+        // role: role
       };
 
-      const url = 'http://localhost:8089/user/register';
+      const url = 'http://localhost:8080/users/1';
 
       try {
         const resp = await fetch(url, {

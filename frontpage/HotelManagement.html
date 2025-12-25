@@ -401,20 +401,20 @@
         <thead>
         <tr>
           <th>姓名</th>
-          <th>职位</th>
-          <th>部门</th>
+<!--          <th>职位</th>-->
+<!--          <th>部门</th>-->
           <th>联系电话</th>
-          <th>状态</th>
-          <th>操作</th>
+<!--          <th>状态</th>-->
+<!--          <th>操作</th>-->
         </tr>
         </thead>
         <tbody id="managerTableBody">
         <tr>
           <td>张明</td>
-          <td>总经理</td>
-          <td>管理层</td>
+<!--          <td>总经理</td>-->
+<!--          <td>管理层</td>-->
           <td>138-0559-8888</td>
-          <td><span class="status-indicator status-normal"></span>在岗</td>
+<!--          <td><span class="status-indicator status-normal"></span>在岗</td>-->
           <td>
             <button class="btn btn-edit" onclick="editManager(this)">编辑</button>
             <button class="btn btn-delete" onclick="deleteManager(this)">删除</button>
@@ -422,10 +422,10 @@
         </tr>
         <tr>
           <td>李华</td>
-          <td>前厅经理</td>
-          <td>前厅部</td>
+<!--          <td>前厅经理</td>-->
+<!--          <td>前厅部</td>-->
           <td>139-0559-7777</td>
-          <td><span class="status-indicator status-normal"></span>在岗</td>
+<!--          <td><span class="status-indicator status-normal"></span>在岗</td>-->
           <td>
             <button class="btn btn-edit" onclick="editManager(this)">编辑</button>
             <button class="btn btn-delete" onclick="deleteManager(this)">删除</button>
@@ -433,10 +433,10 @@
         </tr>
         <tr>
           <td>王芳</td>
-          <td>客房经理</td>
-          <td>客房部</td>
+<!--          <td>客房经理</td>-->
+<!--          <td>客房部</td>-->
           <td>137-0559-6666</td>
-          <td><span class="status-indicator status-warning"></span>休假</td>
+<!--          <td><span class="status-indicator status-warning"></span>休假</td>-->
           <td>
             <button class="btn btn-edit" onclick="editManager(this)">编辑</button>
             <button class="btn btn-delete" onclick="deleteManager(this)">删除</button>
@@ -457,26 +457,26 @@
         <label>姓名</label>
         <input type="text" id="managerName" required>
       </div>
-      <div class="form-group">
-        <label>职位</label>
-        <input type="text" id="managerPosition" required>
-      </div>
-      <div class="form-group">
-        <label>部门</label>
-        <input type="text" id="managerDepartment" required>
-      </div>
+<!--      <div class="form-group">-->
+<!--        <label>职位</label>-->
+<!--        <input type="text" id="managerPosition" required>-->
+<!--      </div>-->
+<!--      <div class="form-group">-->
+<!--        <label>部门</label>-->
+<!--        <input type="text" id="managerDepartment" required>-->
+<!--      </div>-->
       <div class="form-group">
         <label>联系电话</label>
         <input type="tel" id="managerPhone" required>
       </div>
-      <div class="form-group">
-        <label>状态</label>
-        <select id="managerStatus" style="width: 100%; padding: 0.8rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.1); color: white;">
-          <option value="normal">在岗</option>
-          <option value="warning">休假</option>
-          <option value="danger">离职</option>
-        </select>
-      </div>
+<!--      <div class="form-group">-->
+<!--        <label>状态</label>-->
+<!--        <select id="managerStatus" style="width: 100%; padding: 0.8rem; border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; background: rgba(255,255,255,0.1); color: white;">-->
+<!--          <option value="normal">在岗</option>-->
+<!--          <option value="warning">休假</option>-->
+<!--          <option value="danger">离职</option>-->
+<!--        </select>-->
+<!--      </div>-->
       <div class="modal-buttons">
         <button type="button" class="btn btn-delete" onclick="closeModal()">取消</button>
         <button type="submit" class="btn btn-add">保存</button>
@@ -645,5 +645,6 @@
     });
   });
 </script>
+
 </body>
 </html>
