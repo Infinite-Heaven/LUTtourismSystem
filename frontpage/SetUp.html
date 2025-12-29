@@ -5,7 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <link rel="stylesheet" href="indexx.css">
-  <title>用户注册 - 学生成绩管理系统</title>
+  <title>用户注册 - 旅游行业管理与运行调度系统</title>
   <style>
     .role-select {
       width: 100%;
@@ -34,15 +34,9 @@
   <div class="left"></div>
   <div class="right">
     <h4>注 册</h4>
-    <form id="register-form" action="http://localhost:8080/users/1" method="POST">
+    <form id="register-form">
       <input class="acc" type="text" name="name" id="name" placeholder="用户名" required>
       <input class="acc" type="password" name="psw" id="psw" placeholder="密码" required>
-<!--      <select class="role-select" name="role" id="role" required>-->
-<!--        <option value="">请选择角色</option>-->
-<!--        <option value="student">学生</option>-->
-<!--        <option value="teacher">教师</option>-->
-<!--        <option value="admin">管理员</option>-->
-<!--      </select>-->
       <input class="submit" type="submit" value="注册">
     </form>
     <div class="fn">
@@ -63,26 +57,45 @@
       e.preventDefault();
 
       const name = document.getElementById('name').value.trim();
-      const psd = document.getElementById('psd').value.trim();
-      // const role = document.getElementById('role').value;
+      const psw = document.getElementById('psw').value.trim();
 
-      if (!name || !psd) {
+      if (!name || !psw) {
         alert('用户名和密码不能为空');
         return;
       }
 
-      if (!role) {
-        alert('请选择用户角色');
+      // 检查用户名长度
+      if (name.length < 3) {
+        alert('用户名至少需要3个字符');
         return;
       }
 
+      // 检查密码长度
+      if (psw.length < 6) {
+        alert('密码至少需要6个字符');
+        return;
+      }
+
+      // 先检查用户名是否已存在
+      try {
+        const checkResp = await fetch(`http://localhost:8080/users/check-username?name=${encodeURIComponent(name)}`);
+        const checkData = await checkResp.json();
+        
+        if (checkData.exists) {
+          alert('该用户名已存在，请使用其他用户名');
+          return;
+        }
+      } catch (err) {
+        console.error('检查用户名失败:', err);
+        // 继续注册流程，让后端处理
+      }
+
       const payload = {
-        username: name,
-        password: psd,
-        // role: role
+        name: name,
+        psw: psw
       };
 
-      const url = 'http://localhost:8080/users/1';
+      const url = 'http://localhost:8080/users';
 
       try {
         const resp = await fetch(url, {
@@ -90,14 +103,15 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        const text = await resp.text();
 
-        if (text === '用户添加成功') {
+        if (resp.ok) {
+          const user = await resp.json();
           alert('注册成功！请登录');
           // 注册成功后跳转到登录页面
-          window.location.href = '登陆界面.html';
+          window.location.href = 'Login.html';
         } else {
-          alert(text || '注册失败，请检查输入信息');
+          const errorData = await resp.json().catch(() => ({ message: '注册失败' }));
+          alert(errorData.message || '注册失败，请检查输入信息');
         }
       } catch (err) {
         console.error(err);

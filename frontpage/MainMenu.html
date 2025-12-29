@@ -666,9 +666,31 @@ value">刚刚</div>
     }
   }
 
+  // 检查登录状态
+  function checkLoginStatus() {
+    const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+    if (!isLoggedIn || isLoggedIn !== 'true') {
+      alert('请先登录');
+      window.location.href = 'Login.html';
+      return false;
+    }
+    return true;
+  }
+
   // 页面加载完成后初始化
   document.addEventListener('DOMContentLoaded', function() {
     console.log('智慧旅游管理与调度系统已加载');
+    
+    // 检查登录状态
+    if (!checkLoginStatus()) {
+      return;
+    }
+    
+    // 显示当前登录用户
+    const username = sessionStorage.getItem('username');
+    if (username) {
+      console.log('当前登录用户:', username);
+    }
     
     // 加载景区数据
     loadAttractionData();
