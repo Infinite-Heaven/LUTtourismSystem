@@ -1,6 +1,5 @@
 package lut.luttourismsystem.Controller;
 import lut.luttourismsystem.Entity.Restaurant;
-import lut.luttourismsystem.Entity.User;
 import lut.luttourismsystem.Service.RestaurantService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

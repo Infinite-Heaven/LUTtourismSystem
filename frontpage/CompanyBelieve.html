@@ -824,25 +824,8 @@
             alert('请填写完整信息');
             return;
         }
-        const table = document.getElementById('archiveTable').querySelector('tbody');
-        const newRow = table.insertRow(0);
-        newRow.innerHTML = `
-        <td>${name}</td>
-        <td>${type}</td>
-        <td><span class="level-${level.toLowerCase()}">${level}</span></td>
-        <td><span class="score-badge score-good">85</span></td>
-        <td>0</td>
-        <td>100%</td>
-        <td>${new Date().toLocaleDateString('zh-CN')}</td>
-        <td>
-          <button class="btn btn-edit" onclick="showDetailModal(this)">详情</button>
-          <button class="btn btn-primary" onclick="showComplaintModal(this)">关联投诉</button>
-          <button class="btn btn-warning" onclick="showEvaluateModal(this)">重新评价</button>
-        </td>
-      `;
-        closeDetailModal();
-        updateStats();
-        alert('诚信档案已创建！');
+        // 调用保存新档案函数（已移至saveNewArchive函数，通过API保存）
+        saveNewArchive();
     }
 
     // 保存评价
@@ -896,16 +879,142 @@
         window.print();
     }
 
-    // 更新统计数据
-    function updateStats() {
-        const rows = document.getElementById('archiveTable').querySelectorAll('tbody tr');
-        let aaaCount = 0;
-        rows.forEach(row => {
-            const level = row.cells[2].textContent.trim();
-            if (level === 'AAA') aaaCount++;
+    // API配置
+    const API_BASE = 'http://localhost:8080';
+    
+    // 加载诚信档案数据
+    function loadCreditArchives() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/credit-archive",
+            dataType: "json",
+            success: function(archives) {
+                console.log('获取到的诚信档案数据:', archives);
+                updateCreditArchivesTable(archives);
+                updateStats(archives);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取诚信档案数据失败:', error);
+            }
         });
-        document.getElementById('totalEnterprises').textContent = rows.length;
-        document.getElementById('aaaEnterprises').textContent = aaaCount;
+    }
+    
+    // 更新诚信档案表格
+    function updateCreditArchivesTable(archives) {
+        const tbody = document.querySelector('#archiveTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!archives || archives.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        const archivesArray = Array.isArray(archives) ? archives : [archives];
+        
+        archivesArray.forEach(archive => {
+            const tr = tbody.insertRow();
+            const levelClass = archive.creditLevel === '优秀' ? 'level-aaa' :
+                             archive.creditLevel === '良好' ? 'level-aa' :
+                             archive.creditLevel === '一般' ? 'level-a' :
+                             archive.creditLevel === '较差' ? 'level-b' : 'level-c';
+            
+            const score = archive.creditScore || 0;
+            const scoreClass = score >= 90 ? 'score-excellent' :
+                             score >= 80 ? 'score-good' :
+                             score >= 70 ? 'score-fair' : 'score-poor';
+            
+            const handleRate = archive.handleTimelyRate ? archive.handleTimelyRate.toFixed(1) + '%' : '0%';
+            
+            tr.innerHTML = `
+                <td>${archive.entityName || '未知'}</td>
+                <td>${archive.entityType || '未知'}</td>
+                <td><span class="level-${levelClass}">${archive.creditLevel || '未评级'}</span></td>
+                <td><span class="score-badge ${scoreClass}">${score}</span></td>
+                <td>${archive.totalComplaints || 0}</td>
+                <td>${handleRate}</td>
+                <td>${archive.lastEvaluationTime ? new Date(archive.lastEvaluationTime).toLocaleDateString('zh-CN') : '未知'}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="showDetailModal(${archive.archiveId})">详情</button>
+                    <button class="btn btn-primary" onclick="showComplaintModal(${archive.archiveId})">关联投诉</button>
+                    <button class="btn btn-warning" onclick="showEvaluateModal(${archive.archiveId})">重新评价</button>
+                </td>
+            `;
+        });
+    }
+    
+    // 保存新档案（提交到后端）
+    function saveNewArchive() {
+        const archiveData = {
+            entityName: document.getElementById('modalEnterpriseName').value,
+            entityType: document.getElementById('modalEnterpriseType').value,
+            creditLevel: document.getElementById('modalInitialLevel').value,
+            creditScore: document.getElementById('modalInitialLevel').value === 'AAA' ? 90 :
+                        document.getElementById('modalInitialLevel').value === 'AA' ? 80 :
+                        document.getElementById('modalInitialLevel').value === 'A' ? 70 : 60,
+            totalComplaints: 0,
+            resolvedComplaints: 0,
+            unresolvedComplaints: 0
+        };
+        
+        $.ajax({
+            type: "POST",
+            url: API_BASE + "/credit-archive",
+            contentType: "application/json",
+            data: JSON.stringify(archiveData),
+            success: function() {
+                alert('诚信档案已创建！');
+                closeDetailModal();
+                loadCreditArchives(); // 重新加载数据
+            },
+            error: function(xhr, status, error) {
+                alert('创建档案失败: ' + error);
+            }
+        });
+    }
+    
+    // 根据投诉更新诚信档案
+    function updateArchiveFromComplaint(entityType, entityId) {
+        $.ajax({
+            type: "POST",
+            url: API_BASE + "/credit-archive/update-from-complaint/" + entityType + "/" + entityId,
+            success: function() {
+                alert('诚信档案已更新！');
+                loadCreditArchives();
+            },
+            error: function(xhr, status, error) {
+                alert('更新档案失败: ' + error);
+            }
+        });
+    }
+    
+    // 更新统计数据
+    function updateStats(archives) {
+        if (!archives) {
+            const rows = document.getElementById('archiveTable')?.querySelectorAll('tbody tr') || [];
+            let aaaCount = 0;
+            rows.forEach(row => {
+                const level = row.cells[2]?.textContent.trim();
+                if (level === 'AAA' || level === '优秀') aaaCount++;
+            });
+            if (document.getElementById('totalEnterprises')) document.getElementById('totalEnterprises').textContent = rows.length;
+            if (document.getElementById('aaaEnterprises')) document.getElementById('aaaEnterprises').textContent = aaaCount;
+            return;
+        }
+        
+        const archivesArray = Array.isArray(archives) ? archives : [archives];
+        const total = archivesArray.length;
+        const aaaCount = archivesArray.filter(a => a.creditLevel === '优秀' || a.creditLevel === 'AAA').length;
+        const totalComplaints = archivesArray.reduce((sum, a) => sum + (a.totalComplaints || 0), 0);
+        const avgScore = archivesArray.length > 0 
+            ? (archivesArray.reduce((sum, a) => sum + (a.creditScore || 0), 0) / archivesArray.length).toFixed(1)
+            : 0;
+        
+        if (document.getElementById('totalEnterprises')) document.getElementById('totalEnterprises').textContent = total;
+        if (document.getElementById('aaaEnterprises')) document.getElementById('aaaEnterprises').textContent = aaaCount;
+        if (document.getElementById('投诉总量')) document.getElementById('投诉总量').textContent = totalComplaints;
+        if (document.getElementById('avgScore')) document.getElementById('avgScore').textContent = avgScore;
     }
 
     // 重置表单
@@ -918,8 +1027,14 @@
         document.getElementById('enterpriseDescription').value = '';
     }
 
-    // 页面加载动画
+    // 页面加载动画和数据加载
     document.addEventListener('DOMContentLoaded',()=>{
+        // 加载诚信档案数据
+        loadCreditArchives();
+        
+        // 定时刷新数据（每30秒）
+        setInterval(loadCreditArchives, 30000);
+        
         document.querySelectorAll('.card').forEach((c,i)=>{
             c.style.opacity = '0';
             c.style.transform = 'translateY(20px)';

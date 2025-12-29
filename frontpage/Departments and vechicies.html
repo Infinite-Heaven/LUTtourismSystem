@@ -438,6 +438,306 @@
     function closeModal(){
         document.getElementById('universalModal').style.display = 'none';
     }
+    // API配置
+    const API_BASE = 'http://localhost:8080';
+    
+    // 加载旅行社数据
+    function loadTravelAgencies() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/travel-agency",
+            dataType: "json",
+            success: function(agencies) {
+                console.log('获取到的旅行社数据:', agencies);
+                updateAgenciesTable(agencies);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取旅行社数据失败:', error);
+            }
+        });
+    }
+    
+    // 更新旅行社表格
+    function updateAgenciesTable(agencies) {
+        const tbody = document.querySelector('#agencyTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!agencies || agencies.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        const agenciesArray = Array.isArray(agencies) ? agencies : [agencies];
+        
+        agenciesArray.forEach(agency => {
+            const tr = tbody.insertRow();
+            tr.innerHTML = `
+                <td>${agency.name || '未知'}</td>
+                <td>${agency.qualification || '未设置'}</td>
+                <td><span class="status-badge ${agency.creditStatus === '良好' ? 'status-online' : 'status-offline'}">${agency.creditStatus || '未知'}</span></td>
+                <td>
+                    <button class="btn btn-edit" onclick="editAgency(${agency.agencyId})">编辑</button>
+                    <button class="btn btn-delete" onclick="deleteAgency(${agency.agencyId})">删除</button>
+                </td>
+            `;
+        });
+    }
+    
+    // 加载车辆数据
+    function loadTourVehicles() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/tour-vehicle",
+            dataType: "json",
+            success: function(vehicles) {
+                console.log('获取到的车辆数据:', vehicles);
+                updateVehiclesTable(vehicles);
+                updateVehicleStats(vehicles);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取车辆数据失败:', error);
+            }
+        });
+    }
+    
+    // 更新车辆表格
+    function updateVehiclesTable(vehicles) {
+        const tbody = document.querySelector('#vehicleTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!vehicles || vehicles.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        const vehiclesArray = Array.isArray(vehicles) ? vehicles : [vehicles];
+        
+        vehiclesArray.forEach(vehicle => {
+            const tr = tbody.insertRow();
+            const statusClass = vehicle.status === '运行中' ? 'status-online' : 
+                              vehicle.status === '停靠' ? 'status-offline' : 'status-pending';
+            tr.innerHTML = `
+                <td>${vehicle.licensePlate || '未知'}</td>
+                <td>${vehicle.driverName || '未知'}</td>
+                <td>${vehicle.driverPhone || '未知'}</td>
+                <td>${vehicle.vehicleCondition || '未知'}</td>
+                <td><span class="status-badge ${statusClass}">${vehicle.status || '未知'}</span></td>
+                <td>
+                    <button class="btn btn-edit" onclick="editVehicle(${vehicle.vehicleId})">编辑</button>
+                    <button class="btn btn-delete" onclick="deleteVehicle(${vehicle.vehicleId})">删除</button>
+                </td>
+            `;
+        });
+    }
+    
+    // 更新车辆统计
+    function updateVehicleStats(vehicles) {
+        if (!vehicles) return;
+        const vehiclesArray = Array.isArray(vehicles) ? vehicles : [vehicles];
+        const onlineCount = vehiclesArray.filter(v => v.status === '运行中').length;
+        if (document.getElementById('busCount')) {
+            document.getElementById('busCount').textContent = onlineCount;
+        }
+    }
+    
+    // 加载电子行程单数据
+    function loadElectronicItineraries() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/electronic-itinerary",
+            dataType: "json",
+            success: function(itineraries) {
+                console.log('获取到的行程单数据:', itineraries);
+                updateItinerariesTable(itineraries);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取行程单数据失败:', error);
+            }
+        });
+    }
+    
+    // 更新行程单表格
+    function updateItinerariesTable(itineraries) {
+        const tbody = document.querySelector('#itineraryTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!itineraries || itineraries.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        const itinerariesArray = Array.isArray(itineraries) ? itineraries : [itineraries];
+        
+        itinerariesArray.forEach(itinerary => {
+            const tr = tbody.insertRow();
+            const deviatedClass = itinerary.isDeviated ? 'alert-high' : '';
+            tr.className = deviatedClass;
+            tr.innerHTML = `
+                <td>${itinerary.teamNumber || '未知'}</td>
+                <td>${itinerary.agencyName || '未知'}</td>
+                <td>${itinerary.guideName || '未知'}</td>
+                <td>${itinerary.isDeviated ? '是' : '否'}</td>
+                <td>${itinerary.deviationDistance ? itinerary.deviationDistance.toFixed(2) + '米' : '0米'}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="editItinerary(${itinerary.itineraryId})">编辑</button>
+                    <button class="btn btn-delete" onclick="deleteItinerary(${itinerary.itineraryId})">删除</button>
+                </td>
+            `;
+        });
+    }
+    
+    // 加载出境游数据
+    function loadOutboundTours() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/outbound-tour",
+            dataType: "json",
+            success: function(tours) {
+                console.log('获取到的出境游数据:', tours);
+                updateOutboundToursTable(tours);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取出境游数据失败:', error);
+            }
+        });
+    }
+    
+    // 更新出境游表格
+    function updateOutboundToursTable(tours) {
+        const tbody = document.querySelector('#visaTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!tours || tours.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        const toursArray = Array.isArray(tours) ? tours : [tours];
+        
+        toursArray.forEach(tour => {
+            const tr = tbody.insertRow();
+            const statusClass = tour.visaStatus === '已通过' ? 'status-approved' :
+                              tour.visaStatus === '已拒绝' ? 'status-rejected' : 'status-pending';
+            tr.innerHTML = `
+                <td>${tour.teamNumber || 'V' + String(tour.outboundTourId).padStart(8, '0')}</td>
+                <td>${tour.destination || '未知'}</td>
+                <td>${tour.teamMembers || 0}</td>
+                <td>${tour.applicationTime ? new Date(tour.applicationTime).toLocaleDateString('zh-CN') : '未知'}</td>
+                <td><span class="status-badge ${statusClass}">${tour.visaStatus || '待审核'}</span></td>
+                <td>
+                    <button class="btn btn-primary" onclick="approveVisa(${tour.outboundTourId})">通过</button>
+                    <button class="btn btn-delete" onclick="rejectVisa(${tour.outboundTourId})">拒绝</button>
+                </td>
+            `;
+        });
+    }
+    
+    // 编辑/删除函数
+    function editAgency(id) {
+        alert('编辑旅行社功能：ID=' + id);
+    }
+    
+    function deleteAgency(id) {
+        if (!confirm('确定删除该旅行社？')) return;
+        $.ajax({
+            type: "DELETE",
+            url: API_BASE + "/travel-agency/" + id,
+            success: function() {
+                alert('删除成功');
+                loadTravelAgencies();
+            },
+            error: function(xhr, status, error) {
+                alert('删除失败: ' + error);
+            }
+        });
+    }
+    
+    function editVehicle(id) {
+        alert('编辑车辆功能：ID=' + id);
+    }
+    
+    function deleteVehicle(id) {
+        if (!confirm('确定删除该车辆？')) return;
+        $.ajax({
+            type: "DELETE",
+            url: API_BASE + "/tour-vehicle/" + id,
+            success: function() {
+                alert('删除成功');
+                loadTourVehicles();
+            },
+            error: function(xhr, status, error) {
+                alert('删除失败: ' + error);
+            }
+        });
+    }
+    
+    function editItinerary(id) {
+        alert('编辑行程单功能：ID=' + id);
+    }
+    
+    function deleteItinerary(id) {
+        if (!confirm('确定删除该行程单？')) return;
+        $.ajax({
+            type: "DELETE",
+            url: API_BASE + "/electronic-itinerary/" + id,
+            success: function() {
+                alert('删除成功');
+                loadElectronicItineraries();
+            },
+            error: function(xhr, status, error) {
+                alert('删除失败: ' + error);
+            }
+        });
+    }
+    
+    function approveVisa(id) {
+        $.ajax({
+            type: "PUT",
+            url: API_BASE + "/outbound-tour/" + id,
+            contentType: "application/json",
+            data: JSON.stringify({
+                visaStatus: '已通过',
+                reviewer: '当前用户',
+                reviewTime: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            }),
+            success: function() {
+                alert('审核通过');
+                loadOutboundTours();
+            },
+            error: function(xhr, status, error) {
+                alert('操作失败: ' + error);
+            }
+        });
+    }
+    
+    function rejectVisa(id) {
+        $.ajax({
+            type: "PUT",
+            url: API_BASE + "/outbound-tour/" + id,
+            contentType: "application/json",
+            data: JSON.stringify({
+                visaStatus: '已拒绝',
+                reviewer: '当前用户',
+                reviewTime: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            }),
+            success: function() {
+                alert('已拒绝');
+                loadOutboundTours();
+            },
+            error: function(xhr, status, error) {
+                alert('操作失败: ' + error);
+            }
+        });
+    }
+
     document.getElementById('universalForm').addEventListener('submit',function(e){
         e.preventDefault();
         const tbody = document.getElementById(currentTable+'Table').querySelector('tbody');
@@ -460,19 +760,7 @@
         if(confirm('确定删除？')) btn.closest('tr').remove();
     }
 
-    // 签证审核
-    function visaPass(btn){
-        const row = btn.closest('tr');
-        row.cells[4].innerHTML = '<span class="status-badge status-pass">已通过</span>';
-        btn.disabled = true;
-        btn.nextElementSibling.disabled = true;
-    }
-    function visaReject(btn){
-        const row = btn.closest('tr');
-        row.cells[4].innerHTML = '<span class="status-badge status-reject">已拒绝</span>';
-        btn.previousElementSibling.disabled = true;
-        btn.disabled = true;
-    }
+    // 签证审核（已移至上面的approveVisa和rejectVisa函数）
 
     // 行程单管理
     function addItinerary(){
@@ -487,26 +775,46 @@
         alert('编辑功能：可扩展上传/替换文件');
     }
 
-    // 实时数据模拟
-    setInterval(()=>{
-        const tourist = document.getElementById('touristCount');
-        const bus = document.getElementById('busCount');
-        let t = parseInt(tourist.textContent.replace(',',''));
-        let b = parseInt(bus.textContent);
-        t += Math.floor(Math.random()*11-5);
-        b += Math.floor(Math.random()*5-2);
-        t = Math.max(0,t);
-        b = Math.max(0,b);
-        tourist.textContent = t.toLocaleString();
-        bus.textContent = b;
-        document.getElementById('touristProgress').style.width = Math.min(100, (t/2000)*100) + '%';
-    },3000);
+    // 实时数据更新（从后端获取）
+    function updateRealTimeData() {
+        loadTourVehicles();
+        // 可以从旅行社数据中获取今日团队出游人数
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/travel-agency",
+            dataType: "json",
+            success: function(agencies) {
+                if (agencies && agencies.length > 0) {
+                    const totalTourists = agencies.reduce((sum, a) => sum + (a.todayTeamMembers || 0), 0);
+                    if (document.getElementById('touristCount')) {
+                        document.getElementById('touristCount').textContent = totalTourists.toLocaleString();
+                    }
+                    if (document.getElementById('touristProgress')) {
+                        document.getElementById('touristProgress').style.width = Math.min(100, (totalTourists/2000)*100) + '%';
+                    }
+                }
+            }
+        });
+    }
 
     // 地图占位
     console.log('地图接口预留：可接入高德/百度/Google地图API');
 
-    // 初始动画
+    // 页面加载和数据加载
     document.addEventListener('DOMContentLoaded',()=>{
+        // 加载所有数据
+        loadTravelAgencies();
+        loadTourVehicles();
+        loadElectronicItineraries();
+        loadOutboundTours();
+        updateRealTimeData();
+        
+        // 定时刷新数据
+        setInterval(updateRealTimeData, 5000);
+        setInterval(loadTourVehicles, 10000);
+        setInterval(loadElectronicItineraries, 15000);
+        
+        // 页面加载动画
         document.querySelectorAll('.card').forEach((c,i)=>{
             c.style.opacity = '0';
             c.style.transform = 'translateY(20px)';

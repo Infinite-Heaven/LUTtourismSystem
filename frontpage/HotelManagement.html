@@ -486,47 +486,83 @@
 </div>
 
 <script>
-  // 模拟实时数据更新
-  function updateRealTimeData() {
+  const API_BASE = 'http://localhost:8080';
+  
+  // 从后端加载饭店数据
+  function loadHotelsData() {
+    $.ajax({
+      type: "GET",
+      url: API_BASE + "/hotel",
+      dataType: "json",
+      success: function(hotels) {
+        console.log('获取到的饭店数据:', hotels);
+        if (hotels && hotels.length > 0) {
+          const hotel = Array.isArray(hotels) ? hotels[0] : hotels;
+          updateHotelInfo(hotel);
+        }
+      },
+      error: function(xhr, status, error) {
+        console.error('获取饭店数据失败:', error);
+      }
+    });
+  }
+  
+  // 更新饭店信息显示
+  function updateHotelInfo(hotel) {
+    if (!hotel) return;
+    
+    // 更新入住率
+    const occupancyRate = hotel.occupancyRate || 0;
     const occupancyElement = document.getElementById('occupancy-rate');
     const occupiedRoomsElement = document.getElementById('occupied-rooms');
+    if (occupancyElement) occupancyElement.textContent = occupancyRate.toFixed(1) + '%';
+    if (occupiedRoomsElement) occupiedRoomsElement.textContent = hotel.currentOccupiedRooms || 0;
+    
+    // 更新进度条
+    const progressFill = document.getElementById('progress-fill');
+    if (progressFill) progressFill.style.width = occupancyRate + '%';
+    
+    // 更新停车位信息
+    const parkingTotal = hotel.parkingTotal || 0;
+    const parkingOccupied = parkingTotal - (hotel.parkingRemaining || 0);
     const parkingOccupiedElement = document.getElementById('parking-occupied');
     const parkingAvailableElement = document.getElementById('parking-available');
-
-    // 模拟入住率变化
-    let currentOccupancy = parseFloat(occupancyElement.textContent);
-    let change = (Math.random() - 0.5) * 2; // -1 到 1 之间
-    currentOccupancy += change;
-    currentOccupancy = Math.max(0, Math.min(100, currentOccupancy));
-
-    // 更新显示
-    occupancyElement.textContent = currentOccupancy.toFixed(1) + '%';
-    occupiedRoomsElement.textContent = Math.round(1200 * currentOccupancy / 100);
-
-    // 更新进度条
-    document.getElementById('progress-fill').style.width = currentOccupancy + '%';
-
-    // 模拟停车位变化
-    let parkingOccupied = parseInt(parkingOccupiedElement.textContent);
-    let parkingChange = Math.floor(Math.random() * 11) - 5;
-    parkingOccupied += parkingChange;
-    parkingOccupied = Math.max(0, Math.min(580, parkingOccupied));
-
-    parkingOccupiedElement.textContent = parkingOccupied;
-    parkingAvailableElement.textContent = 580 - parkingOccupied;
-
+    if (parkingOccupiedElement) parkingOccupiedElement.textContent = parkingOccupied;
+    if (parkingAvailableElement) parkingAvailableElement.textContent = hotel.parkingRemaining || 0;
+    
     // 更新停车位进度条
-    document.getElementById('parking-progress').style.width = (parkingOccupied / 580 * 100) + '%';
-
+    const parkingProgress = document.getElementById('parking-progress');
+    if (parkingProgress && parkingTotal > 0) {
+      parkingProgress.style.width = (parkingOccupied / parkingTotal * 100) + '%';
+    }
+    
     // 更新状态指示器
     const statusIndicator = document.querySelector('.status-indicator');
-    if (currentOccupancy > 90) {
-      statusIndicator.className = 'status-indicator status-danger';
-    } else if (currentOccupancy > 80) {
-      statusIndicator.className = 'status-indicator status-warning';
-    } else {
-      statusIndicator.className = 'status-indicator status-normal';
+    if (statusIndicator) {
+      if (occupancyRate > 90) {
+        statusIndicator.className = 'status-indicator status-danger';
+      } else if (occupancyRate > 80) {
+        statusIndicator.className = 'status-indicator status-warning';
+      } else {
+        statusIndicator.className = 'status-indicator status-normal';
+      }
     }
+    
+    // 更新其他信息
+    if (document.getElementById('hotel-name')) {
+      document.getElementById('hotel-name').textContent = hotel.name || '未知';
+    }
+    if (document.getElementById('star-level')) {
+      document.getElementById('star-level').textContent = (hotel.starLevel || 0) + '星';
+    }
+    if (document.getElementById('max-capacity')) {
+      document.getElementById('max-capacity').textContent = (hotel.maxCapacity || 0) + ' 间';
+    }
+  }
+  
+  // 实时数据更新（从后端获取）
+  function updateRealTimeData() {
+    loadHotelsData();
   }
 
   // 管理员管理功能
@@ -626,7 +662,13 @@
   }
 
   // 定时更新数据
-  setInterval(updateRealTimeData, 3000);
+  // 页面加载时初始化
+  document.addEventListener('DOMContentLoaded', function() {
+    // 首次加载数据
+    loadHotelsData();
+    // 定时更新数据（每3秒）
+    setInterval(updateRealTimeData, 3000);
+  });
 
   // 页面加载完成后的初始化
   document.addEventListener('DOMContentLoaded', function() {

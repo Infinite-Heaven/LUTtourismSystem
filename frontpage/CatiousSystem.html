@@ -600,30 +600,7 @@
         closeProcessModal();
     });
 
-    // 发布审核功能
-    function approvePublish(btn) {
-        const row = btn.closest('tr');
-        row.cells[5].innerHTML = '<span class="status-badge status-approved">已通过</span>';
-        btn.disabled = true;
-        btn.nextElementSibling.disabled = true;
-        alert('已审核通过，将推送至信息发布系统！');
-    }
-    function rejectPublish(btn) {
-        const row = btn.closest('tr');
-        row.cells[5].innerHTML = '<span class="status-badge status-rejected">已拒绝</span>';
-        btn.previousElementSibling.disabled = true;
-        btn.disabled = true;
-        alert('已拒绝该发布申请！');
-    }
-
-    // 处置完成功能
-    function completeProcess(btn) {
-        const row = btn.closest('tr');
-        row.cells[4].innerHTML = '<span class="status-badge status-success">已完成</span>';
-        btn.disabled = true;
-        btn.previousElementSibling.disabled = true;
-        alert('告警处置已完成！');
-    }
+    // 发布审核功能（已移至上面的approveAlert和rejectAlert函数）
 
     // 行程编辑功能
     function editRoute(btn) {
@@ -635,17 +612,7 @@
         }
     }
 
-    // 阈值设定功能
-    function saveThresholds() {
-        const thresholds = {
-            tourist: document.getElementById('touristPercent').value,
-            parking: document.getElementById('parkingPercent').value,
-            hotel: document.getElementById('hotelPercent').value,
-            cable: document.getElementById('cableTime').value
-        };
-        localStorage.setItem('alertThresholds', JSON.stringify(thresholds));
-        alert('阈值设定已保存！');
-    }
+    // 阈值设定功能（已移至上面的saveThresholds函数）
     function resetThresholds() {
         if (confirm('确定重置为默认值？')) {
             document.getElementById('touristPercent').value = 80;
@@ -660,16 +627,305 @@
         alert('发布历史功能：可查看已发布的告警信息记录');
     }
 
-    // 页面加载时读取保存的阈值
+    // API配置
+    const API_BASE = 'http://localhost:8080';
+    
+    // 加载告警规则数据
+    function loadAlertRules() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/alert-rule",
+            dataType: "json",
+            success: function(rules) {
+                console.log('获取到的告警规则:', rules);
+                updateAlertRulesTable(rules);
+                // 更新阈值设定表单
+                updateThresholdsForm(rules);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取告警规则失败:', error);
+            }
+        });
+    }
+    
+    // 更新告警规则表格
+    function updateAlertRulesTable(rules) {
+        const tbody = document.querySelector('#thresholdTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!rules || rules.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        const rulesArray = Array.isArray(rules) ? rules : [rules];
+        
+        rulesArray.forEach(rule => {
+            if (!rule.isEnabled) return; // 只显示启用的规则
+            
+            const tr = tbody.insertRow();
+            tr.innerHTML = `
+                <td>${rule.ruleName || rule.ruleType || '未知'}</td>
+                <td>${rule.thresholdValue || 0} ${rule.thresholdUnit || ''}</td>
+                <td>${rule.targetType || '全部'}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="editAlertRule(${rule.ruleId})">编辑</button>
+                    <button class="btn btn-delete" onclick="deleteAlertRule(${rule.ruleId})">删除</button>
+                </td>
+            `;
+        });
+    }
+    
+    // 更新阈值设定表单
+    function updateThresholdsForm(rules) {
+        if (!rules || rules.length === 0) return;
+        
+        const rulesArray = Array.isArray(rules) ? rules : [rules];
+        
+        rulesArray.forEach(rule => {
+            if (rule.ruleType === '景区游客百分比' && document.getElementById('touristPercent')) {
+                document.getElementById('touristPercent').value = rule.thresholdValue || 80;
+            } else if (rule.ruleType === '停车位百分比' && document.getElementById('parkingPercent')) {
+                document.getElementById('parkingPercent').value = rule.thresholdValue || 85;
+            } else if (rule.ruleType === '饭店入住率' && document.getElementById('hotelPercent')) {
+                document.getElementById('hotelPercent').value = rule.thresholdValue || 90;
+            } else if (rule.ruleType === '缆车等候时间' && document.getElementById('cableTime')) {
+                document.getElementById('cableTime').value = rule.thresholdValue || 30;
+            }
+        });
+    }
+    
+    // 加载告警报告数据
+    function loadAlertReports() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/alert",
+            dataType: "json",
+            success: function(alerts) {
+                console.log('获取到的告警报告:', alerts);
+                updateAlertReportsTable(alerts);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取告警报告失败:', error);
+            }
+        });
+    }
+    
+    // 更新告警报告表格
+    function updateAlertReportsTable(alerts) {
+        const tbody = document.querySelector('#publishTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!alerts || alerts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        const alertsArray = Array.isArray(alerts) ? alerts : [alerts];
+        
+        alertsArray.forEach(alert => {
+            const tr = tbody.insertRow();
+            const statusClass = alert.status === '已处理' ? 'status-approved' : 
+                               alert.status === '已发布' ? 'status-published' : 'status-pending';
+            const alertClass = alert.alertLevel === '严重' ? 'alert-high' :
+                             alert.alertLevel === '警告' ? 'alert-medium' : 'alert-low';
+            tr.className = alertClass;
+            
+            tr.innerHTML = `
+                <td>${alert.alertType || '未知'}</td>
+                <td>${alert.content || '无内容'}</td>
+                <td>${alert.alertLevel || '未知'}</td>
+                <td>${alert.createTime || '未知'}</td>
+                <td>${alert.handler || '未分配'}</td>
+                <td><span class="status-badge ${statusClass}">${alert.status || '待处理'}</span></td>
+                <td>
+                    ${alert.status === '待处理' ? `
+                        <button class="btn btn-success" onclick="approveAlert(${alert.alertId})">通过</button>
+                        <button class="btn btn-danger" onclick="rejectAlert(${alert.alertId})">拒绝</button>
+                    ` : ''}
+                </td>
+            `;
+        });
+    }
+    
+    // 加载待处置告警
+    function loadProcessAlerts() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/alert/status/待处理",
+            dataType: "json",
+            success: function(alerts) {
+                updateProcessTable(alerts);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取待处置告警失败:', error);
+            }
+        });
+    }
+    
+    // 更新处置表格
+    function updateProcessTable(alerts) {
+        const tbody = document.querySelector('#processTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!alerts || alerts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">暂无待处置告警</td></tr>';
+            return;
+        }
+        
+        const alertsArray = Array.isArray(alerts) ? alerts : [alerts];
+        
+        alertsArray.forEach(alert => {
+            const tr = tbody.insertRow();
+            tr.innerHTML = `
+                <td>A${String(alert.alertId).padStart(8, '0')}</td>
+                <td>${alert.alertType || '未知'}</td>
+                <td>${alert.content || '无内容'}</td>
+                <td>${alert.createTime || '未知'}</td>
+                <td><span class="status-badge status-pending">待处置</span></td>
+                <td>
+                    <button class="btn btn-primary" onclick="showProcessModal(${alert.alertId})">处置登记</button>
+                    <button class="btn btn-success" onclick="completeAlert(${alert.alertId})">完成</button>
+                </td>
+            `;
+        });
+    }
+    
+    // 编辑告警规则
+    function editAlertRule(id) {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/alert-rule/" + id,
+            dataType: "json",
+            success: function(rule) {
+                // 填充表单并显示编辑模态框
+                alert('编辑告警规则功能：ID=' + id);
+            },
+            error: function(xhr, status, error) {
+                alert('获取告警规则失败: ' + error);
+            }
+        });
+    }
+    
+    // 删除告警规则
+    function deleteAlertRule(id) {
+        if (!confirm('确定删除该告警规则？')) return;
+        
+        $.ajax({
+            type: "DELETE",
+            url: API_BASE + "/alert-rule/" + id,
+            success: function() {
+                alert('删除成功');
+                loadAlertRules();
+            },
+            error: function(xhr, status, error) {
+                alert('删除失败: ' + error);
+            }
+        });
+    }
+    
+    // 审批告警
+    function approveAlert(id) {
+        $.ajax({
+            type: "PUT",
+            url: API_BASE + "/alert/" + id,
+            contentType: "application/json",
+            data: JSON.stringify({
+                status: '已通过',
+                isApproved: true,
+                approver: '当前用户',
+                approveTime: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            }),
+            success: function() {
+                alert('审核通过');
+                loadAlertReports();
+            },
+            error: function(xhr, status, error) {
+                alert('操作失败: ' + error);
+            }
+        });
+    }
+    
+    // 拒绝告警
+    function rejectAlert(id) {
+        $.ajax({
+            type: "PUT",
+            url: API_BASE + "/alert/" + id,
+            contentType: "application/json",
+            data: JSON.stringify({
+                status: '已拒绝',
+                isApproved: false
+            }),
+            success: function() {
+                alert('已拒绝');
+                loadAlertReports();
+            },
+            error: function(xhr, status, error) {
+                alert('操作失败: ' + error);
+            }
+        });
+    }
+    
+    // 完成告警处置
+    function completeAlert(id) {
+        $.ajax({
+            type: "PUT",
+            url: API_BASE + "/alert/" + id,
+            contentType: "application/json",
+            data: JSON.stringify({
+                status: '已处理',
+                handler: '当前用户',
+                handleTime: new Date().toISOString().slice(0, 19).replace('T', ' ')
+            }),
+            success: function() {
+                alert('处置完成');
+                loadProcessAlerts();
+            },
+            error: function(xhr, status, error) {
+                alert('操作失败: ' + error);
+            }
+        });
+    }
+    
+    // 保存阈值设定（更新到后端）
+    function saveThresholds() {
+        const thresholds = {
+            tourist: document.getElementById('touristPercent').value,
+            parking: document.getElementById('parkingPercent').value,
+            hotel: document.getElementById('hotelPercent').value,
+            cable: document.getElementById('cableTime').value
+        };
+        
+        // 这里应该调用API保存规则，暂时保存到localStorage
+        localStorage.setItem('alertThresholds', JSON.stringify(thresholds));
+        alert('阈值设定已保存！');
+    }
+
+    // 页面加载时读取保存的阈值并加载数据
     window.onload = function() {
         const saved = localStorage.getItem('alertThresholds');
         if (saved) {
             const thresholds = JSON.parse(saved);
-            document.getElementById('touristPercent').value = thresholds.tourist;
-            document.getElementById('parkingPercent').value = thresholds.parking;
-            document.getElementById('hotelPercent').value = thresholds.hotel;
-            document.getElementById('cableTime').value = thresholds.cable;
+            if (document.getElementById('touristPercent')) document.getElementById('touristPercent').value = thresholds.tourist;
+            if (document.getElementById('parkingPercent')) document.getElementById('parkingPercent').value = thresholds.parking;
+            if (document.getElementById('hotelPercent')) document.getElementById('hotelPercent').value = thresholds.hotel;
+            if (document.getElementById('cableTime')) document.getElementById('cableTime').value = thresholds.cable;
         }
+        
+        // 加载后端数据
+        loadAlertRules();
+        loadAlertReports();
+        loadProcessAlerts();
+        
+        // 定时刷新
+        setInterval(loadAlertReports, 10000);
+        setInterval(loadProcessAlerts, 10000);
     };
 
     // 点击模态框外部关闭

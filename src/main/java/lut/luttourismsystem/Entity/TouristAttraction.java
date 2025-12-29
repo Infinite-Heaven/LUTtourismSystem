@@ -25,9 +25,18 @@ public class TouristAttraction {
     String managerPhone;
     //紧急联系人
     String emergencyPerson;
+    String emergencyPhone;
+    //应急救援车辆信息
+    int emergencyVehicleCount;
+    String emergencyVehicleInfo;
     //电子地图网址
     String electronicMapUrl;
-
-
-
+    //地理位置信息
+    double longitude;
+    double latitude;
+    String address;
+    //创建时间
+    String createTime;
+    //更新时间
+    String updateTime;
 }

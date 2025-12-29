@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/alert")
+@CrossOrigin(origins = "*")
 public class AlertReportController {
     @Autowired
     private AlertReportService alertReportService;
@@ -20,12 +21,26 @@ public class AlertReportController {
         return ResponseEntity.ok(alertReports);
     }
 
+    @GetMapping("/status/{status}")
+    public ResponseEntity<java.util.List<AlertReport>> getAlertReportsByStatus(@PathVariable String status) {
+        java.util.List<AlertReport> alertReports = alertReportService.findByStatus(status);
+        return ResponseEntity.ok(alertReports);
+    }
+
+    @GetMapping("/type/{alertType}")
+    public ResponseEntity<java.util.List<AlertReport>> getAlertReportsByType(@PathVariable String alertType) {
+        java.util.List<AlertReport> alertReports = alertReportService.findByAlertType(alertType);
+        return ResponseEntity.ok(alertReports);
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<AlertReport> getAlertReportById(@PathVariable int id) {
         try {
             AlertReport alertReport = alertReportService.find(id);
-            return ResponseEntity.ok(alertReport);
+            if (alertReport != null) {
+                return ResponseEntity.ok(alertReport);
+            }
+            return ResponseEntity.notFound().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
@@ -42,9 +57,10 @@ public class AlertReportController {
     @PutMapping("/{id}")
     public ResponseEntity<AlertReport> updateAlertReport(@PathVariable int id, @RequestBody AlertReport alertReport) {
         try {
-            // 检查警报报告是否存在
-            alertReportService.find(id);
-            // 设置ID确保更新的是正确的警报报告
+            AlertReport existing = alertReportService.find(id);
+            if (existing == null) {
+                return ResponseEntity.notFound().build();
+            }
             alertReport.setAlertId(id);
             alertReportService.update(alertReport);
             return ResponseEntity.ok(alertReport);
@@ -53,12 +69,13 @@ public class AlertReportController {
         }
     }
 
-
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteAlertReport(@PathVariable int id) {
         try {
-            // 检查警报报告是否存在
-            alertReportService.find(id);
+            AlertReport existing = alertReportService.find(id);
+            if (existing == null) {
+                return ResponseEntity.notFound().build();
+            }
             alertReportService.delete(id);
             return ResponseEntity.noContent().build();
         } catch (Exception e) {

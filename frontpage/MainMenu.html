@@ -279,22 +279,22 @@
         <div class="card-icon"></div>
         <div class="card-title">景区基础信息</div>
       </div>
-      <div class="info-grid">
+      <div class="info-grid" id="attraction-info">
         <div class="info-item">
           <div class="info-label">景区名称</div>
-          <div class="info-value">黄山风景区</div>
+          <div class="info-value" id="attraction-name">加载中...</div>
         </div>
         <div class="info-item">
           <div class="info-label">最大客流量</div>
-          <div class="info-value">50,000 人/天</div>
+          <div class="info-value" id="max-capacity">加载中...</div>
         </div>
         <div class="info-item">
           <div class="info-label">停车位总数</div>
-          <div class="info-value">2,800 个</div>
+          <div class="info-value" id="parking-total">加载中...</div>
         </div>
         <div class="info-item">
-          <div class="info-label">景区等级</div>
-          <div class="info-value">AAAAA级</div>
+          <div class="info-label">当前游客数</div>
+          <div class="info-value" id="current-capacity">加载中...</div>
         </div>
       </div>
     </div>
@@ -305,24 +305,22 @@
         <div class="card-icon"></div>
         <div class="card-title">景区管理人员</div>
       </div>
-      <div class="info-grid">
+      <div class="info-grid" id="manager-info">
         <div class="info-item">
-          <div class="info-label">总管理人员</div>
-          <div class="info-value">186 人</div>
+          <div class="info-label">管理人员</div>
+          <div class="info-value" id="manager-name">加载中...</div>
         </div>
         <div class="info-item">
-          <div class="info-label">在岗人员</div>
-          <div class="info-value">
-            <span class="status-indicator status-normal"></span>142 人
-          </div>
+          <div class="info-label">联系电话</div>
+          <div class="info-value" id="manager-phone">加载中...</div>
         </div>
         <div class="info-item">
-          <div class="info-label">安保人员</div>
-          <div class="info-value">68 人</div>
+          <div class="info-label">紧急联系人</div>
+          <div class="info-value" id="emergency-person">加载中...</div>
         </div>
         <div class="info-item">
-          <div class="info-label">客服人员</div>
-          <div class="info-value">45 人</div>
+          <div class="info-label">紧急电话</div>
+          <div class="info-value" id="emergency-phone">加载中...</div>
         </div>
       </div>
     </div>
@@ -394,19 +392,29 @@
     <div class="card-title">景区电子地图</div>
   </div>
   <div class="map-container">
-    <div> 景区电子地图加载中...</div>
-    <div class="map-overlay">
-      当前位置：黄山风景区南门
+    <div id="map-loading">景区电子地图加载中...</div>
+    <div class="map-overlay" id="map-location">
+      当前位置：加载中...
     </div>
   </div>
   <div class="info-grid" style="margin-top: 1rem;">
     <div class="info-item">
       <div class="info-label">经度</div>
-      <div class="info-value">118.1678°E</div>
+      <div class="info-value" id="longitude">加载中...</div>
     </div>
     <div class="info-item">
       <div class="info-label">纬度</div>
-      <div class="info-value">30.1446°N</div>
+      <div class="info-value" id="latitude">加载中...</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">地址</div>
+      <div class="info-value" id="address">加载中...</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">电子地图</div>
+      <div class="info-value">
+        <a href="#" id="map-url" target="_blank" style="color: #4fc3f7;">查看地图</a>
+      </div>
     </div>
   </div>
 </div>
@@ -417,20 +425,22 @@
     <div class="card-icon"></div>
     <div class="card-title">应急救援信息</div>
   </div>
-  <div class="info-grid">
+  <div class="info-grid" id="emergency-info">
     <div class="info-item">
-      <div class="info-label">救援人员</div>
-      <div class="info-value">32 人</div>
+      <div class="info-label">紧急联系人</div>
+      <div class="info-value" id="emergency-person-name">加载中...</div>
     </div>
     <div class="info-item">
-      <div class="info-label">救护车</div>
-      <div class="info-value">4 辆</div>
+      <div class="info-label">应急电话</div>
+      <div class="info-value" id="emergency-phone-number">加载中...</div>
     </div>
     <div class="info-item">
-      <div class="info-
-label">应急电话</div>
-      <div class="info-
-value">0559-5561111</div>
+      <div class="info-label">应急车辆数</div>
+      <div class="info-value" id="emergency-vehicle-count">加载中...</div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">车辆信息</div>
+      <div class="info-value" id="emergency-vehicle-info">加载中...</div>
     </div>
   </div>
 </div>
@@ -498,134 +508,187 @@ value">刚刚</div>
 </div> -
 </div>
 <script>
-  //模拟实时数据更新
-  function updateRealTimeData() {
-    const touristElement = document.querySelector('.data-number');
-    const parkingElement = document.querySelectorAll('.data-number')[1];
-    // 模拟游客数量变化
-    let currentTourists = parseInt(touristElement.textContent.replace(',', ''));
-    let currentParking = parseInt(parkingElement.textContent.replace(',', ''));
-
-    // 随机增减
-    currentTourists += Math.floor(Math.random() * 21) - 10;
-    currentParking += Math.floor(Math.random() * 11) - 5;
-
-    // 确保数值在合理范围内
-    currentTourists = Math.max(0, Math.min(50000, currentTourists));
-    currentParking = Math.max(0, Math.min(2800, currentParking));
-
-    touristElement.textContent = currentTourists.toLocaleString();
-    parkingElement.textContent = currentParking.toLocaleString();
-
-    // 更新状态指示器
-    const statusIndicator = document.querySelector('.status-indicator');
-    if (currentTourists > 40000) {
-      statusIndicator.className = 'status-indicator status-danger';
-    } else if (currentTourists > 35000) {
-      statusIndicator.className = 'status-indicator status-warning';
-    } else {
-      statusIndicator.className = 'status-indicator status-normal';
-    }
-  }
-
   // 导航函数
   function navigateTo(page) {
     console.log(`导航到: ${page}`);
-    // 这里可以添加实际的页面跳转逻辑
-    alert(`正在跳转到${page}页面...`);
   }
 
-  // 从后端获取景区当前人数
-  function loadTouristCount() {
+  const API_BASE = 'http://localhost:8080';
+  
+  // 从后端获取景区完整信息
+  function loadAttractionData() {
+    // 获取第一个景区（如果有多个，可以改为获取列表）
     $.ajax({
       type: "GET",
-      url: "http://localhost:8080/tourist/1",
+      url: API_BASE + "/tourist",
       dataType: "json",
-      success: function(response) {
-        console.log('获取到的景区数据:', response);
-        // jQuery 的 dataType:"json" 已经自动解析了 JSON，response 已经是对象
-        // 尝试不同的属性名（因为 Jackson 可能将 CurrentCapacity 转换为 currentCapacity）
-        let currentCapacity = response.CurrentCapacity || response.currentCapacity;
-
-        if (currentCapacity !== undefined && currentCapacity !== null) {
-          // 格式化数字，添加千位分隔符
-          const formattedCount = parseInt(currentCapacity).toLocaleString();
-          document.getElementById("tourist").innerHTML = formattedCount;
-          console.log('成功更新游客数量:', formattedCount);
+      success: function(attractions) {
+        console.log('获取到的景区列表:', attractions);
+        if (attractions && attractions.length > 0) {
+          const attraction = Array.isArray(attractions) ? attractions[0] : attractions;
+          updateAttractionInfo(attraction);
         } else {
-          console.error('响应数据中没有找到当前人数属性:', response);
-          console.log('可用的属性:', Object.keys(response));
+          // 如果没有数据，尝试获取ID为1的景区
+          loadAttractionById(1);
         }
       },
       error: function(xhr, status, error) {
-        console.error('获取景区数据失败:', error);
-        console.error('状态码:', xhr.status);
-        console.error('响应内容:', xhr.responseText);
-        // 如果请求失败，可以显示默认值或错误提示
-        document.getElementById("tourist").innerHTML = '--';
+        console.error('获取景区列表失败:', error);
+        // 尝试获取ID为1的景区
+        loadAttractionById(1);
       }
     });
   }
 
-  function loadCarsCount() {
+  function loadAttractionById(id) {
     $.ajax({
       type: "GET",
-      url: "http://localhost:8080/tourist/1",
+      url: API_BASE + "/tourist/" + id,
       dataType: "json",
-      success: function(response) {
-        console.log('获取到的车辆数据:', response);
-        // jQuery 的 dataType:"json" 已经自动解析了 JSON，response 已经是对象
-        // 尝试不同的属性名（因为 Jackson 可能将 CurrentCapacity 转换为 currentCapacity）
-        let parkingRemaining = response.ParkingRemaining || response.parkingRemaining;
-
-        if (parkingRemaining !== undefined && parkingRemaining !== null) {
-          // 格式化数字，添加千位分隔符
-          const formattedCount = parseInt(parkingRemaining).toLocaleString();
-          document.getElementById("cars").innerHTML = formattedCount;
-          console.log('成功更新游客数量:', formattedCount);
-        } else {
-          console.error('响应数据中没有找到当前车辆属性:', response);
-          console.log('可用的属性:', Object.keys(response));
-        }
+      success: function(attraction) {
+        console.log('获取到的景区数据:', attraction);
+        updateAttractionInfo(attraction);
       },
       error: function(xhr, status, error) {
         console.error('获取景区数据失败:', error);
-        console.error('状态码:', xhr.status);
-        console.error('响应内容:', xhr.responseText);
-        // 如果请求失败，可以显示默认值或错误提示
+        document.getElementById("tourist").innerHTML = '--';
         document.getElementById("cars").innerHTML = '--';
       }
     });
   }
 
-  loadCarsCount();
-  setInterval(loadTouristCount, 5000);
+  function updateAttractionInfo(attraction) {
+    if (!attraction) return;
+    
+    console.log('更新景区信息，完整数据:', attraction);
+    
+    // 更新基础信息
+    document.getElementById("attraction-name").textContent = attraction.name || attraction.Name || '未知';
+    document.getElementById("max-capacity").textContent = (attraction.maxCapacity || 0).toLocaleString() + ' 人/天';
+    document.getElementById("parking-total").textContent = (attraction.parkingTotal || 0).toLocaleString() + ' 个';
+    document.getElementById("current-capacity").textContent = (attraction.currentCapacity || attraction.CurrentCapacity || 0).toLocaleString() + ' 人';
+    
+    // 更新管理人员信息
+    document.getElementById("manager-name").textContent = attraction.managerName || '未设置';
+    document.getElementById("manager-phone").textContent = attraction.managerPhone || '未设置';
+    document.getElementById("emergency-person").textContent = attraction.emergencyPerson || '未设置';
+    document.getElementById("emergency-phone").textContent = attraction.emergencyPhone || '未设置';
+    
+    // 更新地理位置信息
+    const longitude = attraction.longitude || 0;
+    const latitude = attraction.latitude || 0;
+    document.getElementById("longitude").textContent = longitude ? longitude.toFixed(4) + '°E' : '未设置';
+    document.getElementById("latitude").textContent = latitude ? latitude.toFixed(4) + '°N' : '未设置';
+    document.getElementById("address").textContent = attraction.address || '未设置';
+    
+    if (attraction.electronicMapUrl) {
+      const mapLink = document.getElementById("map-url");
+      mapLink.href = attraction.electronicMapUrl;
+      mapLink.textContent = '查看地图';
+    }
+    
+    // 更新应急救援信息 - 确保所有字段都正确获取（兼容多种字段名格式）
+    const emergencyPerson = attraction.emergencyPerson || attraction.EmergencyPerson || '未设置';
+    const emergencyPhone = attraction.emergencyPhone || attraction.EmergencyPhone || '未设置';
+    const emergencyVehicleCount = attraction.emergencyVehicleCount || attraction.EmergencyVehicleCount || 0;
+    const emergencyVehicleInfo = attraction.emergencyVehicleInfo || attraction.EmergencyVehicleInfo || '未设置';
+    
+    console.log('应急救援信息:', {
+      emergencyPerson: emergencyPerson,
+      emergencyPhone: emergencyPhone,
+      emergencyVehicleCount: emergencyVehicleCount,
+      emergencyVehicleInfo: emergencyVehicleInfo,
+      rawData: attraction
+    });
+    
+    // 更新应急救援信息面板
+    const emergencyPersonNameEl = document.getElementById("emergency-person-name");
+    const emergencyPhoneNumberEl = document.getElementById("emergency-phone-number");
+    const emergencyVehicleCountEl = document.getElementById("emergency-vehicle-count");
+    const emergencyVehicleInfoEl = document.getElementById("emergency-vehicle-info");
+    
+    if (emergencyPersonNameEl) {
+      emergencyPersonNameEl.textContent = emergencyPerson;
+      console.log('已更新紧急联系人:', emergencyPerson);
+    } else {
+      console.error('找不到元素: emergency-person-name');
+    }
+    
+    if (emergencyPhoneNumberEl) {
+      emergencyPhoneNumberEl.textContent = emergencyPhone;
+      console.log('已更新应急电话:', emergencyPhone);
+    } else {
+      console.error('找不到元素: emergency-phone-number');
+    }
+    
+    if (emergencyVehicleCountEl) {
+      emergencyVehicleCountEl.textContent = emergencyVehicleCount + ' 辆';
+      console.log('已更新应急车辆数:', emergencyVehicleCount);
+    } else {
+      console.error('找不到元素: emergency-vehicle-count');
+    }
+    
+    if (emergencyVehicleInfoEl) {
+      emergencyVehicleInfoEl.textContent = emergencyVehicleInfo;
+      console.log('已更新车辆信息:', emergencyVehicleInfo);
+    } else {
+      console.error('找不到元素: emergency-vehicle-info');
+    }
+    
+    // 更新实时数据
+    const currentCapacity = attraction.currentCapacity || attraction.CurrentCapacity || 0;
+    document.getElementById("tourist").textContent = currentCapacity.toLocaleString();
+    
+    const parkingRemaining = attraction.parkingRemaining || 0;
+    document.getElementById("cars").textContent = parkingRemaining.toLocaleString();
+    
+    // 更新地图位置显示
+    if (attraction.address) {
+      document.getElementById("map-location").textContent = '当前位置：' + attraction.address;
+    }
+    
+    // 更新告警状态
+    const maxCapacity = attraction.maxCapacity || 50000;
+    const usageRate = maxCapacity > 0 ? (currentCapacity / maxCapacity) * 100 : 0;
+    const warningDiv = document.querySelector('.status-indicator');
+    if (warningDiv) {
+      const warningText = warningDiv.nextElementSibling;
+      if (usageRate > 80) {
+        warningDiv.className = 'status-indicator status-danger';
+        if (warningText) warningText.textContent = '客流量严重超载，请立即疏导';
+      } else if (usageRate > 70) {
+        warningDiv.className = 'status-indicator status-warning';
+        if (warningText) warningText.textContent = '客流量接近预警值，请注意疏导';
+      } else {
+        warningDiv.className = 'status-indicator status-normal';
+        if (warningText) warningText.textContent = '客流量正常';
+      }
+    }
+  }
 
-
-  // 定时更新数据（模拟数据更新，但优先使用真实数据）
-  // setInterval(updateRealTimeData, 5000);
-
-  // 页面加载完成后的初始化
+  // 页面加载完成后初始化
   document.addEventListener('DOMContentLoaded', function() {
     console.log('智慧旅游管理与调度系统已加载');
-
-    // 加载景区当前人数
-    loadTouristCount();
-    // 定时刷新景区人数（每5秒）
-    setInterval(loadTouristCount, 5000);
-
-    // 添加一些交互效果
+    
+    // 加载景区数据
+    loadAttractionData();
+    
+    // 定时刷新数据（每5秒）
+    setInterval(loadAttractionData, 5000);
+    
+    // 添加交互效果
     const cards = document.querySelectorAll('.card');
     cards.forEach(card => {
       card.addEventListener('mouseenter', function() {
         this.style.transform = 'translateY(-5px)';
       });
-
       card.addEventListener('mouseleave', function() {
         this.style.transform = 'translateY(0)';
       });
     });
   });
+
+
 </script>
 </body>
 </html>

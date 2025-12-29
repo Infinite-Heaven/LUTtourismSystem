@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/guides")
+@CrossOrigin(origins = "*")
 public class GuideController {
 
 
@@ -28,7 +29,10 @@ public class GuideController {
         public ResponseEntity<Guide> getGuideById(@PathVariable int id) {
             try {
                 Guide guide = guideService.findGuide(id);
-                return ResponseEntity.ok(guide);
+                if (guide != null) {
+                    return ResponseEntity.ok(guide);
+                }
+                return ResponseEntity.notFound().build();
             } catch (Exception e) {
                 return ResponseEntity.notFound().build();
             }
@@ -45,9 +49,10 @@ public class GuideController {
         @PutMapping("/{id}")
         public ResponseEntity<Guide> updateGuide(@PathVariable int id, @RequestBody Guide guide) {
             try {
-                // 检查用户是否存在
-                guideService.findGuide(id);
-                // 设置ID确保更新的是正确的用户
+                Guide existing = guideService.findGuide(id);
+                if (existing == null) {
+                    return ResponseEntity.notFound().build();
+                }
                 guide.setGuideId(id);
                 guideService.updateGuide(guide);
                 return ResponseEntity.ok(guide);
@@ -56,12 +61,13 @@ public class GuideController {
             }
         }
 
-
         @DeleteMapping("/{id}")
         public ResponseEntity<Void> deleteGuide(@PathVariable int id) {
             try {
-                // 检查用户是否存在
-                guideService.findGuide(id);
+                Guide existing = guideService.findGuide(id);
+                if (existing == null) {
+                    return ResponseEntity.notFound().build();
+                }
                 guideService.deleteGuide(id);
                 return ResponseEntity.noContent().build();
             } catch (Exception e) {

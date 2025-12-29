@@ -527,24 +527,169 @@
         if(confirm('确定删除？')) btn.closest('tr').remove();
     }
 
-    // 实时位置数据模拟更新
-    setInterval(()=>{
-        const rows = document.getElementById('locationTable').querySelectorAll('tbody tr');
-        rows.forEach(row=>{
-            const teamCell = row.cells[2];
-            let num = parseInt(teamCell.textContent);
-            num += Math.floor(Math.random()*5-2);
-            num = Math.max(1, num);
-            teamCell.textContent = num;
-
-            const timeCell = row.cells[3];
-            const now = new Date();
-            timeCell.textContent = now.toLocaleString('zh-CN');
+    // API配置
+    const API_BASE = 'http://localhost:8080';
+    
+    // 从后端加载导游数据
+    function loadGuidesData() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/guides",
+            dataType: "json",
+            success: function(guides) {
+                console.log('获取到的导游数据:', guides);
+                updateGuidesTable(guides);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取导游数据失败:', error);
+            }
         });
-    }, 10000);
+    }
+    
+    // 更新导游基础信息表格
+    function updateGuidesTable(guides) {
+        const tbody = document.querySelector('#basicTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = ''; // 清空现有数据
+        
+        if (!guides || guides.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        // 处理单个对象或数组
+        const guidesArray = Array.isArray(guides) ? guides : [guides];
+        
+        guidesArray.forEach(guide => {
+            const tr = tbody.insertRow();
+            tr.innerHTML = `
+                <td>${guide.name || '未知'}</td>
+                <td>${guide.age || '未知'}</td>
+                <td>${guide.sex || '未知'}</td>
+                <td>${guide.registrationNumber || guide.idCard || '未设置'}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="editGuide(${guide.guideId})">编辑</button>
+                    <button class="btn btn-delete" onclick="deleteGuide(${guide.guideId})">删除</button>
+                </td>
+            `;
+        });
+    }
+    
+    // 更新位置信息表格
+    function updateLocationTable(guides) {
+        const tbody = document.querySelector('#locationTable tbody');
+        if (!tbody) return;
+        
+        tbody.innerHTML = '';
+        
+        if (!guides || guides.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">暂无数据</td></tr>';
+            return;
+        }
+        
+        const guidesArray = Array.isArray(guides) ? guides : [guides];
+        
+        guidesArray.forEach(guide => {
+            const tr = tbody.insertRow();
+            const location = guide.currentLocation || 
+                (guide.longitude && guide.latitude ? `${guide.longitude.toFixed(4)}, ${guide.latitude.toFixed(4)}` : '未知');
+            tr.innerHTML = `
+                <td>${guide.name || '未知'}</td>
+                <td>${location}</td>
+                <td>${guide.teamMembersNumber || 0}</td>
+                <td>${guide.updateTime || new Date().toLocaleString('zh-CN')}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="editGuide(${guide.guideId})">编辑</button>
+                </td>
+            `;
+        });
+    }
+    
+    // 编辑导游
+    function editGuide(id) {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/guides/" + id,
+            dataType: "json",
+            success: function(guide) {
+                // 填充表单并显示模态框
+                currentTable = 'basic';
+                editingRow = null;
+                showModal('basic');
+                // 填充表单数据
+                if (document.getElementById('name')) document.getElementById('name').value = guide.name || '';
+                if (document.getElementById('age')) document.getElementById('age').value = guide.age || '';
+                if (document.getElementById('sex')) document.getElementById('sex').value = guide.sex || '';
+            },
+            error: function(xhr, status, error) {
+                alert('获取导游信息失败: ' + error);
+            }
+        });
+    }
+    
+    // 删除导游
+    function deleteGuide(id) {
+        if (!confirm('确定删除该导游？')) return;
+        
+        $.ajax({
+            type: "DELETE",
+            url: API_BASE + "/guides/" + id,
+            success: function() {
+                alert('删除成功');
+                loadGuidesData(); // 重新加载数据
+            },
+            error: function(xhr, status, error) {
+                alert('删除失败: ' + error);
+            }
+        });
+    }
+    
+    // 保存导游（新增或更新）
+    function saveGuide(guideData, isUpdate, guideId) {
+        const url = isUpdate ? API_BASE + "/guides/" + guideId : API_BASE + "/guides";
+        const method = isUpdate ? "PUT" : "POST";
+        
+        $.ajax({
+            type: method,
+            url: url,
+            contentType: "application/json",
+            data: JSON.stringify(guideData),
+            success: function() {
+                alert(isUpdate ? '更新成功' : '添加成功');
+                loadGuidesData(); // 重新加载数据
+                closeModal();
+            },
+            error: function(xhr, status, error) {
+                alert((isUpdate ? '更新' : '添加') + '失败: ' + error);
+            }
+        });
+    }
+    
+    // 实时位置数据更新（从后端获取）
+    function updateLocationData() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/guides",
+            dataType: "json",
+            success: function(guides) {
+                updateLocationTable(guides);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取位置数据失败:', error);
+            }
+        });
+    }
 
-    // 页面加载动画
+    // 页面加载动画和数据加载
     document.addEventListener('DOMContentLoaded',()=>{
+        // 加载导游数据
+        loadGuidesData();
+        
+        // 定时更新位置数据（每10秒）
+        setInterval(updateLocationData, 10000);
+        
+        // 页面加载动画
         document.querySelectorAll('.card').forEach((c,i)=>{
             c.style.opacity = '0';
             c.style.transform = 'translateY(20px)';

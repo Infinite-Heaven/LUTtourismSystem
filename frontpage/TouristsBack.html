@@ -701,28 +701,8 @@
             priority: document.getElementById('priority').value
         };
 
-        // 添加到处理中表格
-        const processTable = document.getElementById('processTable').querySelector('tbody');
-        const newRow = processTable.insertRow(0);
-        const priorityClass = complaintData.priority === '高' ? 'priority-high' :
-            complaintData.priority === '中' ? 'priority-medium' : 'priority-low';
-        newRow.className = priorityClass;
-        newRow.innerHTML = `
-                <td>${complaintData.no}</td>
-                <td>${complaintData.name}</td>
-                <td>${complaintData.type}</td>
-                <td>${complaintData.channel}</td>
-                <td><span class="status-badge status-new">新投诉</span></td>
-                <td>${new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('zh-CN')}</td>
-                <td>
-                    <button class="btn btn-edit" onclick="showProcessModal(this)">处理</button>
-                    <button class="btn btn-primary" onclick="showTimelineModal(this)">流程</button>
-                </td>
-            `;
-
-        updateStats();
-        alert('投诉已登记，进入处理流程！');
-        resetForm();
+        // 调用保存投诉函数（已移至saveComplaint函数，通过API保存）
+        saveComplaint();
     }
 
     // 重置表单
@@ -761,17 +741,159 @@
         window.print();
     }
 
+    // API配置
+    const API_BASE = 'http://localhost:8080';
+    
+    // 加载投诉数据
+    function loadComplaints() {
+        $.ajax({
+            type: "GET",
+            url: API_BASE + "/complaint",
+            dataType: "json",
+            success: function(complaints) {
+                console.log('获取到的投诉数据:', complaints);
+                updateComplaintsTables(complaints);
+                updateStats(complaints);
+            },
+            error: function(xhr, status, error) {
+                console.error('获取投诉数据失败:', error);
+            }
+        });
+    }
+    
+    // 更新投诉表格
+    function updateComplaintsTables(complaints) {
+        if (!complaints) return;
+        
+        const complaintsArray = Array.isArray(complaints) ? complaints : [complaints];
+        
+        // 更新处理中的投诉表格
+        const processTbody = document.querySelector('#processTable tbody');
+        if (processTbody) {
+            processTbody.innerHTML = '';
+            
+            const processingComplaints = complaintsArray.filter(c => 
+                c.status === '待处理' || c.status === '处理中'
+            );
+            
+            if (processingComplaints.length === 0) {
+                processTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无处理中的投诉</td></tr>';
+            } else {
+                processingComplaints.forEach(complaint => {
+                    const tr = processTbody.insertRow();
+                    const priorityClass = complaint.priority === '高' ? 'priority-high' :
+                                        complaint.priority === '中' ? 'priority-medium' : 'priority-low';
+                    tr.className = priorityClass;
+                    
+                    const statusClass = complaint.status === '处理中' ? 'status-processing' : 'status-new';
+                    tr.innerHTML = `
+                        <td>C${String(complaint.reportId).padStart(8, '0')}</td>
+                        <td>${complaint.complainantName || '未知'}</td>
+                        <td>${complaint.complainedType || '未知'}</td>
+                        <td>${complaint.firstHandler || '未分配'}</td>
+                        <td><span class="status-badge ${statusClass}">${complaint.status || '待处理'}</span></td>
+                        <td>${complaint.handleTime ? new Date(complaint.handleTime).toLocaleDateString('zh-CN') : '未设置'}</td>
+                        <td>
+                            <button class="btn btn-edit" onclick="showProcessModal(${complaint.reportId})">处理</button>
+                            <button class="btn btn-primary" onclick="showTimelineModal(${complaint.reportId})">流程</button>
+                        </td>
+                    `;
+                });
+            }
+        }
+        
+        // 更新已完成的投诉表格
+        const completedTbody = document.querySelector('#completedTable tbody');
+        if (completedTbody) {
+            completedTbody.innerHTML = '';
+            
+            const completedComplaints = complaintsArray.filter(c => 
+                c.status === '已处理' || c.status === '已关闭'
+            );
+            
+            if (completedComplaints.length === 0) {
+                completedTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">暂无已完成的投诉</td></tr>';
+            } else {
+                completedComplaints.forEach(complaint => {
+                    const tr = completedTbody.insertRow();
+                    const stars = '⭐'.repeat(complaint.satisfactionRating || 0);
+                    tr.innerHTML = `
+                        <td>C${String(complaint.reportId).padStart(8, '0')}</td>
+                        <td>${complaint.complainantName || '未知'}</td>
+                        <td>${complaint.complainedType || '未知'}</td>
+                        <td>${complaint.handleResult || '已解决'}</td>
+                        <td>${stars || '未评价'}</td>
+                        <td>${complaint.handleTime ? new Date(complaint.handleTime).toLocaleDateString('zh-CN') : '未知'}</td>
+                        <td>
+                            <button class="btn btn-primary" onclick="showDetailModal(${complaint.reportId})">详情</button>
+                            <button class="btn btn-success" onclick="downloadReport(${complaint.reportId})">报告</button>
+                        </td>
+                    `;
+                });
+            }
+        }
+    }
+    
+    // 保存投诉（提交到后端）
+    function saveComplaint() {
+        const complaintData = {
+            complainantName: document.getElementById('complainantName').value,
+            complainantPhone: document.getElementById('complainantPhone').value,
+            complainedType: document.getElementById('complaintType').value,
+            complainedName: document.getElementById('involvedEntity').value,
+            content: document.getElementById('complaintContent').value,
+            complaintChannel: '网站',
+            complaintDate: document.getElementById('complaintTime').value || new Date().toISOString().slice(0, 19).replace('T', ' '),
+            status: '待处理',
+            firstHandler: '当前用户'
+        };
+        
+        $.ajax({
+            type: "POST",
+            url: API_BASE + "/complaint",
+            contentType: "application/json",
+            data: JSON.stringify(complaintData),
+            success: function() {
+                alert('投诉已登记，进入处理流程！');
+                resetForm();
+                loadComplaints(); // 重新加载数据
+            },
+            error: function(xhr, status, error) {
+                alert('保存投诉失败: ' + error);
+            }
+        });
+    }
+    
     // 更新统计数据
-    function updateStats() {
-        const processing = document.getElementById('processTable').querySelectorAll('tbody tr').length;
-        const completed = document.getElementById('completedTable').querySelectorAll('tbody tr').length;
-        const total = processing + completed;
-        const satisfaction = 92.5; // 模拟数据
+    function updateStats(complaints) {
+        if (!complaints) {
+            const processing = document.getElementById('processTable')?.querySelectorAll('tbody tr').length || 0;
+            const completed = document.getElementById('completedTable')?.querySelectorAll('tbody tr').length || 0;
+            const total = processing + completed;
+            const satisfaction = 92.5; // 默认值
 
-        document.getElementById('totalComplaints').textContent = total;
-        document.getElementById('processingComplaints').textContent = processing;
-        document.getElementById('completedComplaints').textContent = completed;
-        document.getElementById('satisfactionRate').textContent = satisfaction + '%';
+            if (document.getElementById('totalComplaints')) document.getElementById('totalComplaints').textContent = total;
+            if (document.getElementById('processingComplaints')) document.getElementById('processingComplaints').textContent = processing;
+            if (document.getElementById('completedComplaints')) document.getElementById('completedComplaints').textContent = completed;
+            if (document.getElementById('satisfactionRate')) document.getElementById('satisfactionRate').textContent = satisfaction + '%';
+            return;
+        }
+        
+        const complaintsArray = Array.isArray(complaints) ? complaints : [complaints];
+        const total = complaintsArray.length;
+        const processing = complaintsArray.filter(c => c.status === '待处理' || c.status === '处理中').length;
+        const completed = complaintsArray.filter(c => c.status === '已处理' || c.status === '已关闭').length;
+        
+        // 计算平均满意度
+        const ratedComplaints = complaintsArray.filter(c => c.satisfactionRating > 0);
+        const satisfaction = ratedComplaints.length > 0 
+            ? (ratedComplaints.reduce((sum, c) => sum + (c.satisfactionRating || 0), 0) / ratedComplaints.length * 20).toFixed(1)
+            : 0;
+
+        if (document.getElementById('totalComplaints')) document.getElementById('totalComplaints').textContent = total;
+        if (document.getElementById('processingComplaints')) document.getElementById('processingComplaints').textContent = processing;
+        if (document.getElementById('completedComplaints')) document.getElementById('completedComplaints').textContent = completed;
+        if (document.getElementById('satisfactionRate')) document.getElementById('satisfactionRate').textContent = satisfaction + '%';
     }
 
     // 点击模态框外部关闭
@@ -782,8 +904,14 @@
     };
 
 
-    // 页面加载动画
+    // 页面加载动画和数据加载
     document.addEventListener('DOMContentLoaded',()=>{
+        // 加载投诉数据
+        loadComplaints();
+        
+        // 定时刷新数据（每10秒）
+        setInterval(loadComplaints, 10000);
+        
         document.querySelectorAll('.card').forEach((c,i)=>{
             c.style.opacity = '0';
             c.style.transform = 'translateY(20px)';
@@ -795,7 +923,9 @@
         });
 
         // 设置默认时间
-        document.getElementById('complaintTime').value = new Date().toISOString().slice(0, 16);
+        if (document.getElementById('complaintTime')) {
+            document.getElementById('complaintTime').value = new Date().toISOString().slice(0, 16);
+        }
     });
 </script>
 </body>
